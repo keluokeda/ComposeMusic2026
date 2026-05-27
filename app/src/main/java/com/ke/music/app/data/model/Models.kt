@@ -30,6 +30,42 @@ data class User(
 )
 
 @Serializable
+data class NotificationComment(
+    val commentId: Long,
+    val user: User,
+    val beRepliedUser: User?,
+    val content: String,
+    val time: Long,
+    val beRepliedContent: String? = null,
+    val resource: NotificationCommentResourceJson
+)
+
+@Serializable
+data class NotificationNoticeResponse(
+    val id: Long,
+    val userId: Long,
+    val time: Long,
+    val type: Int,
+    val noticeJson: Notice
+) {
+    @Serializable
+    data class Notice(
+        val user: User,
+        val subTitle: String
+    )
+}
+
+@Serializable
+data class NotificationCommentResourceJson(
+    val resourceType: Int? = null,
+    val resourceSpecialType: Int? = null,
+    val id: Long,
+    val userId: Long,
+    val name: String,
+    val imgUrl: String? = null
+)
+
+@Serializable
 data class Playlist(
     val id: Long,
     val creator: User,
@@ -50,7 +86,11 @@ data class Song(
     val album: Album,
     val artists: List<Artist>,
     val mv: Long
-)
+) {
+
+    val subTitle: String
+        get() = "${artists.joinToString("/") { it.name }} - ${album.name}"
+}
 
 @Serializable
 data class Album(

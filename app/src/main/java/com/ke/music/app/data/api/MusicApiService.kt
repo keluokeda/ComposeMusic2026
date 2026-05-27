@@ -86,7 +86,6 @@ interface MusicApiService {
         @Query("id") id: Long,
         @Query("index") index: Int,
         @Query("pageSize") pageSize: Int,
-        @Query("cursor") cursor: Long
     ): BaseListVO<CommentVO>
 
     @GET("comment/{commentId}/child")
@@ -106,4 +105,16 @@ interface MusicApiService {
         @Path("userId") userId: Long,
         @Query("before") before: Long
     ): Map<String, String> // The schema for this was additionalProperties: {}
+
+    /**
+     * 通知-评论
+     */
+    @GET("notification/comments")
+    suspend fun notificationComments(@Query("before") before: Long?): BaseListVO<NotificationComment>
+
+    /**
+     * 通知-通知
+     */
+    @GET("notification/notices")
+    suspend fun notices(@Query("cursor") cursor: Long? = null): BaseListVO<NotificationNoticeResponse>
 }

@@ -1,49 +1,55 @@
-package com.ke.music.app.ui.screen.home
+package com.ke.music.app.ui.screen.message
 
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.ke.music.app.MusicApp
-import com.ke.music.app.data.model.Playlist
-import com.ke.music.app.data.repository.UserRepository
+import com.ke.music.app.data.model.PrivateMessageVO
+import com.ke.music.app.data.repository.MessageRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
 @HiltViewModel
-class HomeViewModel @Inject constructor(
-    private val userRepository: UserRepository
+class MessageViewModel @Inject constructor(
+    private val messageRepository: MessageRepository
 ) : ViewModel() {
 
     sealed interface UiState {
         data object Loading : UiState
-        data class Success(val playlists: List<Playlist>) : UiState
 
         data object Error : UiState
 
+        data class Success(val list: List<PrivateMessageVO>) : UiState
     }
 
     var uiState by mutableStateOf<UiState>(UiState.Loading)
         private set
 
+    var isRefreshing by mutableStateOf(false)
+        private set
 
-    fun loadPlaylists() {
+    fun refresh() {
+
         viewModelScope.launch {
-            uiState = UiState.Loading
-            val response = userRepository.currentUserPlaylists()
+            if (uiState is UiState.Success) {
+                isRefreshing = true
+            } else if (uiState == UiState.Error) {
+                uiState = UiState.Loading
+            }
+
+            val response = messageRepository.messageList()
             if (response.success) {
                 uiState = UiState.Success(response.data!!)
             } else {
-                MusicApp.toast(response.message)
                 uiState = UiState.Error
             }
-
+            isRefreshing = false
         }
     }
 
     init {
-        loadPlaylists()
+        refresh()
     }
 }

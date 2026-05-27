@@ -13,7 +13,7 @@ class MusicApp : Application() {
         super.onCreate()
         _instance = this
 
-        Logger.addLogAdapter(object :AndroidLogAdapter(){
+        Logger.addLogAdapter(object : AndroidLogAdapter() {
             override fun isLoggable(priority: Int, tag: String?): Boolean {
                 return BuildConfig.DEBUG
             }
@@ -31,5 +31,19 @@ class MusicApp : Application() {
                 ).show()
             }
         }
+    }
+}
+
+
+fun Int.format(whenZero: String = ""): String {
+    if (this == 0) {
+        return whenZero
+    }
+
+    return if (this < 10000) {
+        this.toString()
+    } else {
+        val wan = this / 10000.0
+        String.format(java.util.Locale.getDefault(), "%.1f万", wan).replace(".0万", "万")
     }
 }

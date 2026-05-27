@@ -93,6 +93,12 @@ dependencies {
     implementation("com.tencent:mmkv:2.4.0")
     implementation("io.coil-kt.coil3:coil-compose:3.4.0")
     implementation("io.coil-kt.coil3:coil-network-okhttp:3.4.0")
+    val paging_version = "3.5.0"
+
+    implementation("androidx.paging:paging-common:$paging_version")
+
+    // Jetpack Compose integration
+    implementation("androidx.paging:paging-compose:$paging_version")
 
     testImplementation(libs.junit)
     androidTestImplementation(platform(libs.androidx.compose.bom))
