@@ -18,4 +18,13 @@ sealed interface Destination : NavKey {
 
     @Serializable
     data object Splash : Destination
+
+    @Serializable
+    data class Comments(val type: Int,val id: Long): Destination
+
+    @Serializable
+    data object NotificationComments: Destination
+
+    @Serializable
+    data object Notices: Destination
 }

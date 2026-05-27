@@ -1,23 +1,39 @@
 package com.ke.music.app.ui.screen.home
 
-import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.BoxWithConstraints
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.aspectRatio
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.items
-import androidx.compose.material3.*
-import androidx.compose.runtime.*
+import androidx.compose.foundation.lazy.items
+import androidx.compose.material3.Card
+import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Text
+import androidx.compose.material3.TopAppBar
+import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.PreviewLightDark
-import androidx.compose.ui.tooling.preview.PreviewScreenSizes
 import androidx.compose.ui.unit.dp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import coil3.compose.AsyncImage
 import com.ke.music.app.data.model.Playlist
 import com.ke.music.app.data.model.User
+import com.ke.music.app.ui.components.LoadingView
+import com.ke.music.app.ui.components.RetryView
 import com.ke.music.app.ui.components.ScreenSize
 import com.ke.music.app.ui.components.screenSize
 import com.ke.music.app.ui.theme.MusicTheme
@@ -27,26 +43,19 @@ fun HomeScreen(
     onPlaylistClick: (Long) -> Unit,
     viewModel: HomeViewModel = hiltViewModel()
 ) {
-    val playlists = viewModel.playlists
-    val isLoading = viewModel.isLoading
 
-    LaunchedEffect(Unit) {
+    HomeScreenContent(viewModel.uiState, onPlaylistClick) {
         viewModel.loadPlaylists()
     }
 
-    HomeScreenContent(
-        playlists = playlists,
-        isLoading = isLoading,
-        onPlaylistClick = onPlaylistClick
-    )
 }
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 private fun HomeScreenContent(
-    playlists: List<Playlist>,
-    isLoading: Boolean,
-    onPlaylistClick: (Long) -> Unit
+    uiState: HomeViewModel.UiState,
+    onPlaylistClick: (Long) -> Unit,
+    retry: () -> Unit
 ) {
     Scaffold(
         topBar = {
@@ -58,44 +67,50 @@ private fun HomeScreenContent(
                 .fillMaxSize()
                 .padding(padding)
         ) {
-            val screenSize = maxWidth.screenSize()
-            val isExpanded = screenSize != ScreenSize.Compact
 
-            if (isLoading && playlists.isEmpty()) {
-                Box(
-                    modifier = Modifier.fillMaxSize()
-                ) {
-                    CircularProgressIndicator(modifier = Modifier.align(Alignment.Center))
+            when (uiState) {
+                HomeViewModel.UiState.Error -> {
+                    RetryView(retry)
                 }
-            } else {
-                if (isExpanded) {
-                    // 折叠屏或平板展示网格
-                    val columns = if (screenSize == ScreenSize.Medium) 3 else 4
-                    LazyVerticalGrid(
-                        columns = GridCells.Fixed(columns),
-                        modifier = Modifier.fillMaxSize(),
-                        contentPadding = PaddingValues(16.dp),
-                        horizontalArrangement = Arrangement.spacedBy(16.dp),
-                        verticalArrangement = Arrangement.spacedBy(16.dp)
-                    ) {
-                        items(playlists) { playlist ->
-                            PlaylistGridItem(playlist, onPlaylistClick)
+
+                HomeViewModel.UiState.Loading -> LoadingView()
+                is HomeViewModel.UiState.Success -> {
+                    val screenSize = maxWidth.screenSize()
+                    val isExpanded = screenSize != ScreenSize.Compact
+
+
+                    if (isExpanded) {
+                        // 折叠屏或平板展示网格
+                        val columns = if (screenSize == ScreenSize.Medium) 3 else 4
+                        LazyVerticalGrid(
+                            columns = GridCells.Fixed(columns),
+                            modifier = Modifier.fillMaxSize(),
+                            contentPadding = PaddingValues(16.dp),
+                            horizontalArrangement = Arrangement.spacedBy(16.dp),
+                            verticalArrangement = Arrangement.spacedBy(16.dp)
+                        ) {
+                            items(uiState.playlists) { playlist ->
+                                PlaylistGridItem(playlist, onPlaylistClick)
+                            }
+                        }
+                    } else {
+                        // 手机展示列表
+                        LazyColumn(
+                            modifier = Modifier.fillMaxSize(),
+                            contentPadding = PaddingValues(16.dp),
+                            verticalArrangement = Arrangement.spacedBy(8.dp)
+                        ) {
+                            items(uiState.playlists) { playlist ->
+                                PlaylistListItem(playlist, onPlaylistClick)
+                            }
                         }
                     }
-                } else {
-                    // 手机展示列表
-                    LazyColumn(
-                        modifier = Modifier.fillMaxSize(),
-                        contentPadding = PaddingValues(16.dp),
-                        verticalArrangement = Arrangement.spacedBy(8.dp)
-                    ) {
-                        items(playlists) { playlist ->
-                            PlaylistListItem(playlist, onPlaylistClick)
-                        }
-                    }
+
                 }
             }
         }
+
+
     }
 }
 
@@ -203,31 +218,31 @@ private val samplePlaylists = listOf(
         updateTime = 0
     )
 )
-
-@PreviewLightDark
-@PreviewScreenSizes
-@Composable
-private fun HomeScreenPreview() {
-    MusicTheme {
-        HomeScreenContent(
-            playlists = samplePlaylists,
-            isLoading = false,
-            onPlaylistClick = {}
-        )
-    }
-}
-
-@PreviewLightDark
-@Composable
-private fun HomeScreenLoadingPreview() {
-    MusicTheme {
-        HomeScreenContent(
-            playlists = emptyList(),
-            isLoading = true,
-            onPlaylistClick = {}
-        )
-    }
-}
+//
+//@PreviewLightDark
+//@PreviewScreenSizes
+//@Composable
+//private fun HomeScreenPreview() {
+//    MusicTheme {
+//        HomeScreenContent(
+//            playlists = samplePlaylists,
+//            isLoading = false,
+//            onPlaylistClick = {}
+//        )
+//    }
+//}
+//
+//@PreviewLightDark
+//@Composable
+//private fun HomeScreenLoadingPreview() {
+//    MusicTheme {
+//        HomeScreenContent(
+//            playlists = emptyList(),
+//            isLoading = true,
+//            onPlaylistClick = {}
+//        )
+//    }
+//}
 
 @PreviewLightDark
 @Composable

@@ -1,5 +1,6 @@
 package com.ke.music.app.data.api
 
+import com.ke.music.app.data.model.BaseListVO
 import com.ke.music.app.data.model.BaseVO
 
 /**
@@ -12,3 +13,5 @@ suspend fun <T> safeApiCall(call: suspend () -> BaseVO<T>): BaseVO<T> {
         BaseVO(code = -1, success = false, message = e.localizedMessage ?: "未知错误")
     }
 }
+
+
