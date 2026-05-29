@@ -117,4 +117,16 @@ interface MusicApiService {
      */
     @GET("notification/notices")
     suspend fun notices(@Query("cursor") cursor: Long? = null): BaseListVO<NotificationNoticeResponse>
+
+    /**
+     * 主页-推荐
+     */
+    @GET("recommend")
+    suspend fun recommend(): BaseVO<RecommendVO>
+
+    /**
+     * 我的
+     */
+    @GET("mine")
+    suspend fun mine(): BaseVO<MineVO>
 }

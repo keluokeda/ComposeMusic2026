@@ -1,4 +1,4 @@
-package com.ke.music.app.ui.screen.home
+package com.ke.music.app.ui.screen.my_playlists
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -39,12 +39,12 @@ import com.ke.music.app.ui.components.screenSize
 import com.ke.music.app.ui.theme.MusicTheme
 
 @Composable
-fun HomeScreen(
+fun MyPlaylistsRoute(
     onPlaylistClick: (Long) -> Unit,
-    viewModel: HomeViewModel = hiltViewModel()
-) {
+    ) {
+    val viewModel: MyPlaylistsViewModel = hiltViewModel()
 
-    HomeScreenContent(viewModel.uiState, onPlaylistClick) {
+    MyPlaylistsScreen(viewModel.uiState, onPlaylistClick) {
         viewModel.loadPlaylists()
     }
 
@@ -52,8 +52,8 @@ fun HomeScreen(
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-private fun HomeScreenContent(
-    uiState: HomeViewModel.UiState,
+private fun MyPlaylistsScreen(
+    uiState: MyPlaylistsViewModel.UiState,
     onPlaylistClick: (Long) -> Unit,
     retry: () -> Unit
 ) {
@@ -69,12 +69,12 @@ private fun HomeScreenContent(
         ) {
 
             when (uiState) {
-                HomeViewModel.UiState.Error -> {
+                MyPlaylistsViewModel.UiState.Error -> {
                     RetryView(retry)
                 }
 
-                HomeViewModel.UiState.Loading -> LoadingView()
-                is HomeViewModel.UiState.Success -> {
+                MyPlaylistsViewModel.UiState.Loading -> LoadingView()
+                is MyPlaylistsViewModel.UiState.Success -> {
                     val screenSize = maxWidth.screenSize()
                     val isExpanded = screenSize != ScreenSize.Compact
 

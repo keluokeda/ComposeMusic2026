@@ -408,7 +408,7 @@ private fun PlaylistDetailCompact(
                     }
 
                     Text(
-                        uiState.response.dynamic.playCount.toInt().format() + "次播放",
+                        uiState.response.dynamic.playCount.format() + "次播放",
                         style = MaterialTheme.typography.bodySmall
                     )
 
@@ -440,20 +440,26 @@ private fun PlaylistDetailCompact(
                 horizontalArrangement = Arrangement.spacedBy(4.dp)
             ) {
 
+                val textStyle = MaterialTheme.typography.bodySmall
 
                 OutlinedButton(onClick = {}, modifier = Modifier.weight(1f)) {
                     iconBuilder(Icons.Default.Share)
                     Text(
-                        if (uiState.response.dynamic.shareCount == 0L) "分享" else uiState.response.dynamic.shareCount.toInt()
-                            .format()
+                        if (uiState.response.dynamic.shareCount == 0L) "分享" else uiState.response.dynamic.shareCount
+                            .format(),
+                        style = textStyle, maxLines = 1
+
                     )
                 }
 
                 OutlinedButton(onClick = toComments, modifier = Modifier.weight(1f)) {
                     iconBuilder(Icons.AutoMirrored.Filled.Comment)
                     Text(
-                        if (uiState.response.dynamic.commentCount == 0L) "评论" else uiState.response.dynamic.commentCount.toInt()
-                            .format()
+                        if (uiState.response.dynamic.commentCount == 0L) "评论" else uiState.response.dynamic.commentCount
+                            .format(),
+                        style = textStyle,
+                        maxLines = 1
+
                     )
                 }
 
@@ -466,8 +472,10 @@ private fun PlaylistDetailCompact(
                 ) {
                     iconBuilder(if (uiState.response.dynamic.subscribed) Icons.Default.Book else Icons.Outlined.Book)
                     Text(
-                        if (uiState.response.dynamic.bookedCount == 0L) "收藏" else uiState.response.dynamic.bookedCount.toInt()
-                            .format()
+                        if (uiState.response.dynamic.bookedCount == 0L) "收藏" else uiState.response.dynamic.bookedCount
+                            .format(),
+                        style = textStyle, maxLines = 1
+
                     )
                 }
             }

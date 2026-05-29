@@ -246,3 +246,522 @@ data class AlbumDetailVO(
     val isSub: Boolean,
     val image: String
 )
+
+@Serializable
+data class RecommendVO(
+    val videos: List<RecommendVideoItem>,
+    val playlists: List<RecommendPlaylist>,
+    val songs: List<Song>,
+    val newSongs: List<NewSongItem>,
+    val toplistItems: List<ToplistItem>,
+) {
+
+    @Serializable
+    data class ToplistItem(
+        val id: Long,
+        val name: String,
+        val description: String?,
+        val coverImgUrl: String
+    )
+
+
+    @Serializable
+    data class NewSongItem(
+        val song: NewSong,
+        val picUrl: String,
+        val canDislike: Boolean,
+        val name: String,
+        val id: Long,
+        val type: Int,
+        val alg: String
+    )
+
+    @Serializable
+    data class NewSong(
+        val id: Long,
+        val name: String,
+        val duration: Int,
+        val fee: Int,
+        val mvid: Long,
+        val no: Int,
+        val disc: String,
+        val copyright: Int,
+        val copyrightId: Long,
+        val commentThreadId: String,
+        val publishTime: Long,
+        val popularity: Int,
+        val score: Int,
+        val originCoverType: Int,
+        val alias: List<String>,
+        val artists: List<Artist>,
+        val album: NewSongAlbum,
+        val privilege: NewSongPrivilege,
+        val lMusic: MusicQuality? = null,
+        val mMusic: MusicQuality? = null,
+        val hMusic: MusicQuality? = null,
+        val sqMusic: MusicQuality? = null,
+        val hrMusic: MusicQuality? = null,
+        val bMusic: MusicQuality? = null,
+        val originSongSimpleData: OriginSongSimpleData? = null
+    )
+
+    @Serializable
+    data class NewSongAlbum(
+        val id: Long,
+        val name: String,
+        val picUrl: String,
+        val publishTime: Long,
+        val type: String,
+        val subType: String,
+        val company: String = "",
+        val size: Int,
+        val artist: Artist,
+        val artists: List<Artist>
+    )
+
+    @Serializable
+    data class MusicQuality(
+        val id: Long,
+        val extension: String,
+        val bitrate: Int,
+        val size: Long,
+        val playTime: Int,
+        val sr: Int
+    )
+
+    @Serializable
+    data class NewSongPrivilege(
+        val id: Long,
+        val fee: Int,
+        val payed: Int,
+        val st: Int,
+        val pl: Int,
+        val dl: Int,
+        val sp: Int,
+        val cp: Int,
+        val subp: Int,
+        val cs: Boolean,
+        val maxbr: Int,
+        val fl: Int,
+        val toast: Boolean,
+        val flag: Long,
+        val preSell: Boolean,
+        val plLevel: String,
+        val dlLevel: String,
+        val flLevel: String,
+        val maxBrLevel: String,
+        val playMaxbr: Int,
+        val playMaxBrLevel: String,
+        val downloadMaxbr: Int,
+        val downloadMaxBrLevel: String,
+        val chargeInfoList: List<ChargeInfo>,
+        val freeTrialPrivilege: FreeTrialPrivilege
+    )
+
+    @Serializable
+    data class ChargeInfo(
+        val rate: Int,
+        val chargeType: Int
+    )
+
+    @Serializable
+    data class FreeTrialPrivilege(
+        val userConsumable: Boolean,
+        val resConsumable: Boolean
+    )
+
+    @Serializable
+    data class OriginSongSimpleData(
+        val name: String,
+        val songId: Long,
+        val artists: List<OriginSongArtist>,
+        val albumMeta: OriginSongAlbumMeta
+    )
+
+    @Serializable
+    data class OriginSongArtist(
+        val id: Long,
+        val name: String
+    )
+
+    @Serializable
+    data class OriginSongAlbumMeta(
+        val id: Long,
+        val name: String
+    )
+
+
+    @Serializable
+    data class RecommendPlaylist(
+        val id: Long,
+        val type: Int,
+        val name: String,
+        val copywriter: String,
+        val picUrl: String,
+        val playcount: Long,
+        val createTime: Long,
+        val creator: RecommendPlaylistCreator,
+        val trackCount: Int,
+        val userId: Long,
+        val alg: String
+    )
+
+    @Serializable
+    data class RecommendPlaylistCreator(
+        val userId: Long,
+        val nickname: String,
+        val avatarUrl: String,
+        val backgroundUrl: String,
+        val avatarImgId: Long,
+        val avatarImgIdStr: String,
+        val backgroundImgId: Long,
+        val backgroundImgIdStr: String,
+        val vipType: Int,
+        val province: Int,
+        val city: Int,
+        val birthday: Long,
+        val accountStatus: Int,
+        val authStatus: Int,
+        val userType: Int,
+        val gender: Int,
+        val detailDescription: String,
+        val description: String,
+        val signature: String,
+        val defaultAvatar: Boolean,
+        val expertTags: List<String>? = null,
+        val djStatus: Int,
+        val followed: Boolean,
+        val mutual: Boolean,
+        val remarkName: String? = null,
+        val authority: Int
+    )
+
+    @Serializable
+    data class RecommendVideoItem(
+        val type: Int,
+        val displayed: Boolean,
+        val alg: String,
+        val extAlg: String? = null,
+        val data: VideoData
+    )
+
+    @Serializable
+    data class VideoData(
+        val alg: String,
+        val scm: String,
+        val threadId: String,
+        val coverUrl: String,
+        val height: Int,
+        val width: Int,
+        val title: String,
+        val description: String? = null,
+        val commentCount: Int,
+        val shareCount: Int,
+        val resolutions: List<VideoResolution>,
+        val creator: VideoCreator,
+        val urlInfo: VideoUrlInfo,
+        val videoGroup: List<VideoGroup>,
+        val previewUrl: String? = null,
+        val previewDurationms: Int,
+        val hasRelatedGameAd: Boolean,
+        val markTypes: List<Int>? = null,
+        val relateSong: List<VideoRelateSong>,
+        val vid: String,
+        val durationms: Long,
+        val playTime: Long,
+        val praisedCount: Int,
+        val praised: Boolean,
+        val subscribed: Boolean
+    )
+
+    @Serializable
+    data class VideoResolution(
+        val resolution: Int,
+        val size: Long
+    )
+
+    @Serializable
+    data class VideoCreator(
+        val userId: Long,
+        val nickname: String,
+        val avatarUrl: String,
+        val backgroundUrl: String,
+        val avatarImgId: Long,
+        val avatarImgIdStr: String,
+        val backgroundImgId: Long,
+        val backgroundImgIdStr: String,
+        val vipType: Int,
+        val province: Int,
+        val city: Int,
+        val birthday: Long,
+        val accountStatus: Int,
+        val authStatus: Int,
+        val userType: Int,
+        val gender: Int,
+        val detailDescription: String,
+        val description: String,
+        val signature: String,
+        val defaultAvatar: Boolean,
+        val expertTags: List<String>? = null,
+        val experts: Map<String, String>? = null,
+        val djStatus: Int,
+        val followed: Boolean,
+        val mutual: Boolean,
+        val remarkName: String? = null,
+        val authority: Int
+    )
+
+    @Serializable
+    data class VideoUrlInfo(
+        val id: String,
+        val url: String,
+        val size: Long,
+        val validityTime: Int,
+        val needPay: Boolean,
+        val r: Int
+    )
+
+    @Serializable
+    data class VideoGroup(
+        val id: Int,
+        val name: String,
+        val alg: String? = null
+    )
+
+    @Serializable
+    data class VideoRelateSong(
+        val id: Long,
+        val name: String,
+
+        val artists: List<Artist>,
+        val album: Album,
+        val dt: Int,
+        val fee: Int,
+        val mv: Long,
+        val privilege: VideoSongPrivilege? = null
+    )
+
+    @Serializable
+    data class VideoSongPrivilege(
+        val id: Long,
+        val fee: Int,
+        val payed: Int,
+        val st: Int,
+        val pl: Int,
+        val dl: Int,
+        val sp: Int,
+        val cp: Int,
+        val subp: Int,
+        val cs: Boolean,
+        val maxbr: Int,
+        val fl: Int,
+        val toast: Boolean,
+        val flag: Long,
+        val preSell: Boolean
+    )
+}
+
+@Serializable
+data class MineVO(
+    val userDetail: UserDetailResponse,
+    val userLevel: UserLevelResponse,
+    val userAccount: UserAccountResponse,
+    val supportStatusList: List<UserSupportStatus>,
+    val currentStatus: UserCurrentStatusResponse
+){
+
+    @Serializable
+    data class UserCurrentStatusResponse(
+        val data:UserCurrentStatus
+    ){
+        @Serializable
+        data class UserCurrentStatus(
+            val id: Long? = null,
+            val userId: Long? = null,
+            val status: Int? = null,
+            val content: UserSupportStatus? = null,
+            val editLimit: Boolean? = null
+        )
+    }
+
+    @Serializable
+    data class UserDetailResponse(
+        val code: Int,
+        val level: Int,
+        val listenSongs: Int,
+        val createTime: Long,
+        val createDays: Int,
+        val mobileSign: Boolean,
+        val pcSign: Boolean,
+        val newUser: Boolean,
+        val recallUser: Boolean,
+        val adValid: Boolean,
+        val peopleCanSeeMyPlayRecord: Boolean,
+        val userPoint: UserPoint,
+        val profile: Profile,
+        val bindings: List<Binding>,
+        val profileVillageInfo: ProfileVillageInfo
+    ) {
+        @Serializable
+        data class UserPoint(
+            val userId: Long,
+            val balance: Int,
+            val blockBalance: Int,
+            val updateTime: Long,
+            val version: Int,
+            val status: Int
+        )
+
+        @Serializable
+        data class Profile(
+            val userId: Long,
+            val nickname: String,
+            val avatarUrl: String,
+            val avatarImgId: Long,
+            val avatarImgIdStr: String,
+            val backgroundUrl: String,
+            val backgroundImgId: Long,
+            val backgroundImgIdStr: String,
+            val signature: String,
+            val createTime: Long,
+            val birthday: Long,
+            val gender: Int,
+            val province: Int,
+            val city: Int,
+            val vipType: Int,
+            val djStatus: Int,
+            val authStatus: Int,
+            val accountStatus: Int,
+            val authority: Int,
+            val userType: Int,
+            val followed: Boolean,
+            val mutual: Boolean,
+            val followMe: Boolean,
+            val defaultAvatar: Boolean,
+            val blacklist: Boolean,
+            val inBlacklist: Boolean,
+            val follows: Int,
+            val followeds: Int,
+            val newFollows: Int,
+            val playlistCount: Int,
+            val eventCount: Int,
+            val description: String,
+            val detailDescription: String,
+            val expertTags: List<String>? = null,
+            val experts: Map<String, String>? = null,
+            val remarkName: String? = null,
+            val avatarDetail: String? = null,
+            val followTime: Long? = null,
+            val privacyItemUnlimit: PrivacyItemUnlimit? = null
+        )
+
+        @Serializable
+        data class PrivacyItemUnlimit(
+            val area: Boolean,
+            val college: Boolean,
+            val gender: Boolean,
+            val age: Boolean,
+            val villageAge: Boolean
+        )
+
+        @Serializable
+        data class Binding(
+            val id: Long,
+            val userId: Long,
+            val type: Int,
+            val expiresIn: Long,
+            val refreshTime: Long,
+            val bindingTime: Long,
+            val expired: Boolean,
+            val url: String,
+            val tokenJsonStr: String? = null
+        )
+
+        @Serializable
+        data class ProfileVillageInfo(
+            val title: String,
+            val targetUrl: String,
+            val imageUrl: String? = null
+        )
+    }
+
+    @Serializable
+    data class UserLevelResponse(
+        val code: Int,
+        val full: Boolean,
+        val data: UserLevelData
+    ) {
+
+        @Serializable
+        data class UserLevelData(
+            val userId: Long,
+            val level: Int,
+            val info: String,
+            val progress: Double,
+            val nowPlayCount: Int,
+            val nextPlayCount: Int,
+            val nowLoginCount: Int,
+            val nextLoginCount: Int
+        )
+    }
+
+
+    @Serializable
+    data class UserAccountResponse(
+        val code: Int,
+        val account: UserAccount,
+        val profile: UserProfile
+    ) {
+
+        @Serializable
+        data class UserAccount(
+            val id: Long,
+            val userName: String,
+            val type: Int,
+            val status: Int,
+            val createTime: Long,
+            val vipType: Int,
+            val ban: Int,
+            val anonimousUser: Boolean,
+            val paidFee: Boolean
+        )
+
+        @Serializable
+        data class UserProfile(
+            val userId: Long,
+            val userType: Int,
+            val nickname: String,
+            val avatarUrl: String,
+            val avatarImgId: Long,
+            val backgroundUrl: String,
+            val backgroundImgId: Long,
+            val signature: String,
+            val createTime: Long,
+            val birthday: Long,
+            val gender: Int,
+            val province: Int,
+            val city: Int,
+            val vipType: Int,
+            val djStatus: Int,
+            val authStatus: Int,
+            val accountStatus: Int,
+            val followed: Boolean,
+            val mutual: Boolean,
+            val defaultAvatar: Boolean,
+            val lastLoginTime: Long,
+            val lastLoginIP: String,
+            val description: String? = null,
+            val detailDescription: String? = null,
+            val expertTags: List<String>? = null,
+            val experts: Map<String, String>? = null,
+            val remarkName: String? = null,
+            val avatarDetail: String? = null
+        )
+    }
+    @Serializable
+    data class UserSupportStatus(
+        val type: String,
+        val iconUrl: String,
+        val content: String
+    )
+}

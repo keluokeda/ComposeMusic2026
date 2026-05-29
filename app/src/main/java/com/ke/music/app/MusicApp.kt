@@ -47,3 +47,18 @@ fun Int.format(whenZero: String = ""): String {
         String.format(java.util.Locale.getDefault(), "%.1f万", wan).replace(".0万", "万")
     }
 }
+
+
+
+fun Long.format(whenZero: String = ""): String {
+    if (this == 0L) {
+        return whenZero
+    }
+
+    return if (this < 10000) {
+        this.toString()
+    } else {
+        val wan = this / 10000.0
+        String.format(java.util.Locale.getDefault(), "%.1f万", wan).replace(".0万", "万")
+    }
+}
