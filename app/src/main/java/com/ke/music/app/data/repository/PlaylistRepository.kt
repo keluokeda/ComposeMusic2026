@@ -10,13 +10,20 @@ import javax.inject.Singleton
 class PlaylistRepository @Inject constructor(
     private val apiService: MusicApiService
 ) {
-    suspend fun playlistDetail(id: Long): BaseVO<PlaylistDetailVO> = safeApiCall { apiService.playlistDetail(id) }
+    suspend fun playlistDetail(id: Long): BaseVO<PlaylistDetailVO> =
+        safeApiCall { apiService.playlistDetail(id) }
 
-    suspend fun deletePlaylist(id: Long): BaseVO<Unit> = safeApiCall { apiService.deletePlaylist(id) }
+    suspend fun deletePlaylist(id: Long): BaseVO<Unit> =
+        safeApiCall { apiService.deletePlaylist(id) }
 
     suspend fun addToPlaylist(playlistId: Long, songIds: List<Long>): BaseVO<Unit> =
         safeApiCall { apiService.addToPlaylist(playlistId, songIds) }
 
     suspend fun deleteSongFromPlaylist(playlistId: Long, songId: Long): BaseVO<Unit> =
         safeApiCall { apiService.deleteSongFromPlaylist(playlistId, songId) }
+
+    suspend fun topPlaylists(category: String?, before: Long, limit: Int = 50) =
+        apiService.topPlaylists(category, before, limit)
+
+    suspend fun topPlaylistTags() =safeApiCall { apiService.topPlaylistTags() }
 }

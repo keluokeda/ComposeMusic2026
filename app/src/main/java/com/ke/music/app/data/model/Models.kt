@@ -254,6 +254,7 @@ data class RecommendVO(
     val songs: List<Song>,
     val newSongs: List<NewSongItem>,
     val toplistItems: List<ToplistItem>,
+    val topArtists: List<Artist>
 ) {
 
     @Serializable
@@ -566,23 +567,28 @@ data class MineVO(
     val userDetail: UserDetailResponse,
     val userLevel: UserLevelResponse,
     val userAccount: UserAccountResponse,
-    val supportStatusList: List<UserSupportStatus>,
-    val currentStatus: UserCurrentStatusResponse
+//    val supportStatusList: List<UserSupportStatus>,
+    val currentStatus: UserSupportStatus?
 ){
 
-    @Serializable
-    data class UserCurrentStatusResponse(
-        val data:UserCurrentStatus
-    ){
-        @Serializable
-        data class UserCurrentStatus(
-            val id: Long? = null,
-            val userId: Long? = null,
-            val status: Int? = null,
-            val content: UserSupportStatus? = null,
-            val editLimit: Boolean? = null
-        )
-    }
+//    @Serializable
+//    data class UserCurrentStatusResponse(
+//        val data:UserCurrentStatus
+//    ){
+//        @Serializable
+//        data class UserCurrentStatus(
+//            val id: Long? = null,
+//            val userId: Long? = null,
+//            val status: Int? = null,
+//            val content: UserSupportStatus? = null,
+//            val editLimit: Boolean? = null
+//        ){
+//
+//            fun toStatus(): UserSupportStatus?{
+//
+//            }
+//        }
+//    }
 
     @Serializable
     data class UserDetailResponse(
@@ -762,6 +768,52 @@ data class MineVO(
     data class UserSupportStatus(
         val type: String,
         val iconUrl: String,
-        val content: String
+        val content: String,
+        val actionUrl: String? = null
+    )
+}
+
+@Serializable
+data class UserStatusVO(
+    val current: MineVO.UserSupportStatus?,
+    val list: List<MineVO.UserSupportStatus>
+)
+
+@Serializable
+data class SameStatusUserResponse(
+    val rcmdTitle: String,
+    val onlyShowState: Boolean,
+    val statusContentDTO: StatusContent,
+    val userRcmdInfoVOList: List<UserRcmdInfo>
+) {
+
+    @Serializable
+    data class StatusContent(
+        val type: String,
+        val iconUrl: String,
+        val content: String,
+        val canEdit: Boolean,
+        val actionUrl: String? = null,
+        val vistorUrl: String? = null,
+        val desc: String? = null
+    )
+
+    @Serializable
+    data class UserRcmdInfo(
+        val userId: Long,
+        val nickName: String,
+        val avatarUrl: String,
+        val actionUrl: String,
+        val statusContentDTO: StatusContent,
+        val tagRcmdVOList: List<TagRcmd>,
+        val rcmdWords: String? = null,
+//        val identityInfoDTO: String? = null
+    )
+
+    @Serializable
+    data class TagRcmd(
+        val name: String,
+        val match: Boolean,
+        val id: Long? = null
     )
 }

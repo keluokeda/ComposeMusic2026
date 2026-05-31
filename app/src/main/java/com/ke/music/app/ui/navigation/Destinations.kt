@@ -20,11 +20,17 @@ sealed interface Destination : NavKey {
     data object Splash : Destination
 
     @Serializable
-    data class Comments(val type: Int,val id: Long): Destination
+    data class Comments(val type: Int, val id: Long) : Destination
 
     @Serializable
-    data object NotificationComments: Destination
+    data object NotificationComments : Destination
 
     @Serializable
-    data object Notices: Destination
+    data object Notices : Destination
+
+    @Serializable
+    data object UserStatus : Destination
+
+    @Serializable
+    data object TopPlaylists: Destination
 }

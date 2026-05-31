@@ -19,12 +19,22 @@ import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.Cloud
+import androidx.compose.material.icons.filled.History
+import androidx.compose.material.icons.filled.PeopleAlt
+import androidx.compose.material.icons.filled.PeopleOutline
+import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material3.Card
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.Icon
 import androidx.compose.material3.LinearProgressIndicator
+import androidx.compose.material3.ListItem
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.pulltorefresh.PullToRefreshBox
 import androidx.compose.runtime.Composable
@@ -101,27 +111,99 @@ private fun MineContent(content: MineVO, navigate: (Destination) -> Unit) {
                 backgroundUrl = profile.backgroundUrl,
                 nickname = profile.nickname,
                 signature = profile.signature,
-                onClick = {  }
+                status = content.currentStatus,
+                onClick = { },
+                onClickStatus = {
+                    navigate(Destination.UserStatus)
+                }
             )
         }
 
-        item {
-            UserStats(
-                follows = profile.follows,
-                followeds = profile.followeds,
-                playlistCount = profile.playlistCount
-            )
-        }
+
 
         item {
             UserLevelCard(levelData)
         }
 
-        if (content.supportStatusList.isNotEmpty()) {
-            item {
-                SupportStatusRow(content.supportStatusList)
+        item {
+            Card {
+                ListItem(
+                    modifier = Modifier.clickable(enabled = true) {
+
+                    },
+                    headlineContent = {
+                        Text("我的关注")
+                    },
+                    leadingContent = {
+                        Icon(Icons.Default.PeopleAlt, null)
+                    }, trailingContent = {
+                        if (content.userDetail.profile.follows != 0) {
+                            Text(content.userDetail.profile.follows.toString())
+                        }
+
+                    }
+                )
+
+                ListItem(
+                    modifier = Modifier.clickable(enabled = true) {
+
+                    },
+                    headlineContent = {
+                        Text("我的粉丝")
+                    },
+                    leadingContent = {
+                        Icon(Icons.Default.PeopleOutline, null)
+                    }, trailingContent = {
+                        if (content.userDetail.profile.followeds != 0) {
+                            Text(content.userDetail.profile.followeds.toString())
+                        }
+
+                    }
+                )
+
+                ListItem(
+                    modifier = Modifier.clickable(enabled = true) {
+
+                    },
+                    headlineContent = {
+                        Text("我的云盘")
+                    },
+                    leadingContent = {
+                        Icon(Icons.Default.Cloud, null)
+                    }
+                )
+
+                ListItem(
+                    modifier = Modifier.clickable(enabled = true) {
+
+                    },
+                    headlineContent = {
+                        Text("最近播放")
+                    },
+                    leadingContent = {
+                        Icon(Icons.Default.History, null)
+                    }
+                )
+
+                ListItem(
+                    modifier = Modifier.clickable(enabled = true) {
+
+                    },
+                    headlineContent = {
+                        Text("设置")
+                    },
+                    leadingContent = {
+                        Icon(Icons.Default.Settings, null)
+                    }
+                )
             }
         }
+
+//        if (content.supportStatusList.isNotEmpty()) {
+//            item {
+//                SupportStatusRow(content.supportStatusList)
+//            }
+//        }
     }
 }
 
@@ -131,7 +213,9 @@ private fun UserHeader(
     backgroundUrl: String,
     nickname: String,
     signature: String,
-    onClick: () -> Unit
+    status: MineVO.UserSupportStatus?,
+    onClick: () -> Unit,
+    onClickStatus: (MineVO.UserSupportStatus?) -> Unit
 ) {
     Box(
         modifier = Modifier
@@ -164,7 +248,11 @@ private fun UserHeader(
                     .clip(CircleShape),
                 contentScale = ContentScale.Crop
             )
-            Column(modifier = Modifier.padding(start = 12.dp)) {
+            Column(
+                modifier = Modifier
+                    .padding(start = 12.dp)
+                    .weight(1f)
+            ) {
                 Text(
                     text = nickname,
                     style = MaterialTheme.typography.titleLarge,
@@ -176,44 +264,63 @@ private fun UserHeader(
                         text = signature,
                         style = MaterialTheme.typography.bodySmall,
                         color = Color.White.copy(alpha = 0.8f),
-                        maxLines = 1,
+                        maxLines = 2,
                         overflow = TextOverflow.Ellipsis
                     )
                 }
+            }
+
+            TextButton(onClick = {
+                onClickStatus(status)
+            }) {
+                if (status != null) {
+                    AsyncImage(
+                        model = status.iconUrl,
+                        null,
+                        modifier = Modifier.size(24.dp),
+                        contentScale = ContentScale.Crop
+                    )
+
+                    Spacer(modifier = Modifier.width(8.dp))
+                }
+
+
+
+                Text(status?.content ?: "+添加")
             }
         }
     }
 }
 
-@Composable
-private fun UserStats(follows: Int, followeds: Int, playlistCount: Int) {
-    Row(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(horizontal = 16.dp),
-        horizontalArrangement = Arrangement.SpaceEvenly
-    ) {
-        StatItem(count = follows, label = "关注")
-        StatItem(count = followeds, label = "粉丝")
-        StatItem(count = playlistCount, label = "歌单")
-    }
-}
-
-@Composable
-private fun StatItem(count: Int, label: String) {
-    Column(horizontalAlignment = Alignment.CenterHorizontally) {
-        Text(
-            text = count.toString(),
-            style = MaterialTheme.typography.titleMedium,
-            fontWeight = FontWeight.Bold
-        )
-        Text(
-            text = label,
-            style = MaterialTheme.typography.bodySmall,
-            color = MaterialTheme.colorScheme.onSurfaceVariant
-        )
-    }
-}
+//@Composable
+//private fun UserStats(follows: Int, followeds: Int, playlistCount: Int) {
+//    Row(
+//        modifier = Modifier
+//            .fillMaxWidth()
+//            .padding(horizontal = 16.dp),
+//        horizontalArrangement = Arrangement.SpaceEvenly
+//    ) {
+//        StatItem(count = follows, label = "关注")
+//        StatItem(count = followeds, label = "粉丝")
+//        StatItem(count = playlistCount, label = "歌单")
+//    }
+//}
+//
+//@Composable
+//private fun StatItem(count: Int, label: String) {
+//    Column(horizontalAlignment = Alignment.CenterHorizontally) {
+//        Text(
+//            text = count.toString(),
+//            style = MaterialTheme.typography.titleMedium,
+//            fontWeight = FontWeight.Bold
+//        )
+//        Text(
+//            text = label,
+//            style = MaterialTheme.typography.bodySmall,
+//            color = MaterialTheme.colorScheme.onSurfaceVariant
+//        )
+//    }
+//}
 
 @Composable
 private fun UserLevelCard(levelData: MineVO.UserLevelResponse.UserLevelData) {
@@ -233,11 +340,11 @@ private fun UserLevelCard(levelData: MineVO.UserLevelResponse.UserLevelData) {
                     style = MaterialTheme.typography.titleMedium,
                     fontWeight = FontWeight.Bold
                 )
-                Text(
-                    text = levelData.info,
-                    style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
-                )
+//                Text(
+//                    text = levelData.info,
+//                    style = MaterialTheme.typography.bodySmall,
+//                    color = MaterialTheme.colorScheme.onSurfaceVariant
+//                )
             }
             Spacer(modifier = Modifier.height(8.dp))
             LinearProgressIndicator(
@@ -263,33 +370,33 @@ private fun UserLevelCard(levelData: MineVO.UserLevelResponse.UserLevelData) {
         }
     }
 }
-
-@Composable
-private fun SupportStatusRow(statusList: List<MineVO.UserSupportStatus>) {
-    LazyRow(
-        contentPadding = PaddingValues(horizontal = 16.dp),
-        horizontalArrangement = Arrangement.spacedBy(12.dp)
-    ) {
-        items(statusList) { status ->
-            Column(
-                horizontalAlignment = Alignment.CenterHorizontally,
-                modifier = Modifier.width(80.dp)
-            ) {
-                AsyncImage(
-                    model = status.iconUrl,
-                    contentDescription = null,
-                    modifier = Modifier
-                        .size(48.dp)
-                        .clip(RoundedCornerShape(8.dp))
-                )
-                Text(
-                    text = status.content,
-                    style = MaterialTheme.typography.bodySmall,
-                    maxLines = 1,
-                    overflow = TextOverflow.Ellipsis,
-                    modifier = Modifier.padding(top = 4.dp)
-                )
-            }
-        }
-    }
-}
+//
+//@Composable
+//private fun SupportStatusRow(statusList: List<MineVO.UserSupportStatus>) {
+//    LazyRow(
+//        contentPadding = PaddingValues(horizontal = 16.dp),
+//        horizontalArrangement = Arrangement.spacedBy(12.dp)
+//    ) {
+//        items(statusList) { status ->
+//            Column(
+//                horizontalAlignment = Alignment.CenterHorizontally,
+//                modifier = Modifier.width(80.dp)
+//            ) {
+//                AsyncImage(
+//                    model = status.iconUrl,
+//                    contentDescription = null,
+//                    modifier = Modifier
+//                        .size(48.dp)
+//                        .clip(RoundedCornerShape(8.dp))
+//                )
+//                Text(
+//                    text = status.content,
+//                    style = MaterialTheme.typography.bodySmall,
+//                    maxLines = 1,
+//                    overflow = TextOverflow.Ellipsis,
+//                    modifier = Modifier.padding(top = 4.dp)
+//                )
+//            }
+//        }
+//    }
+//}

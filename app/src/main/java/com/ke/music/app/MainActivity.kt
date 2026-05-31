@@ -21,6 +21,8 @@ import com.ke.music.app.ui.screen.notification.notices.NoticesRoute
 import com.ke.music.app.ui.screen.playlist.PlaylistDetailRoute
 import com.ke.music.app.ui.screen.playlist.PlaylistDetailViewModel
 import com.ke.music.app.ui.screen.splash.SplashRoute
+import com.ke.music.app.ui.screen.top_playlists.TopPlaylistsRoute
+import com.ke.music.app.ui.screen.user_status.UserStatusRoute
 import com.ke.music.app.ui.theme.MusicTheme
 import dagger.hilt.android.AndroidEntryPoint
 
@@ -91,6 +93,20 @@ class MainActivity : ComponentActivity() {
 
                         entry<Destination.Notices> {
                             NoticesRoute(onBack = { controller.removeLastOrNull() }) { }
+                        }
+
+                        entry<Destination.UserStatus> {
+                            UserStatusRoute(onBack = {
+                                controller.removeLastOrNull()
+                            })
+                        }
+
+                        entry<Destination.TopPlaylists> {
+                            TopPlaylistsRoute(onBack = {
+                                controller.removeLastOrNull()
+                            }) {
+                                controller.add(it)
+                            }
                         }
 
                     }, entryDecorators = listOf(

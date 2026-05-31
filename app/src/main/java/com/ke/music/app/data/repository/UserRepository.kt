@@ -30,4 +30,15 @@ class UserRepository @Inject constructor(
 
     suspend fun currentUserPlaylists(): BaseVO<List<Playlist>> =
         safeApiCall { apiService.currentUserPlaylists() }
+
+    suspend fun userStatus() = safeApiCall { apiService.userStatus() }
+
+    suspend fun updateUserStatus(status: MineVO.UserSupportStatus) = safeApiCall {
+        apiService.updateUserStatus(
+            content = status.content,
+            type = status.type,
+            iconUrl = status.iconUrl,
+            actionUrl = status.actionUrl
+        )
+    }
 }

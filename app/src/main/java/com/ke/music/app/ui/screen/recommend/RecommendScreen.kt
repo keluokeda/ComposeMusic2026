@@ -19,11 +19,13 @@ import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyHorizontalGrid
 import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.pulltorefresh.PullToRefreshBox
 import androidx.compose.runtime.Composable
@@ -102,7 +104,13 @@ private fun RecommendContent(
     ) {
         if (content.playlists.isNotEmpty()) {
             item {
-                SectionTitle("推荐歌单")
+                SectionTitle("推荐歌单") {
+                    TextButton(onClick = {
+                        navigate(Destination.TopPlaylists)
+                    }) {
+                        Text("全部歌单")
+                    }
+                }
                 LazyRow(
                     contentPadding = PaddingValues(horizontal = 16.dp),
                     horizontalArrangement = Arrangement.spacedBy(12.dp)
@@ -168,7 +176,11 @@ private fun RecommendContent(
 
         if (content.songs.isNotEmpty()) {
             item {
-                SectionTitle("推荐歌曲")
+                SectionTitle("推荐歌曲") {
+                    TextButton(onClick = {}) {
+                        Text("历史推荐")
+                    }
+                }
                 LazyHorizontalGrid(
                     rows = GridCells.Fixed(3),
                     modifier = Modifier
@@ -192,9 +204,48 @@ private fun RecommendContent(
             }
         }
 
+        if (content.topArtists.isNotEmpty()) {
+            item {
+                SectionTitle("热门歌手") {
+                    TextButton(onClick = {}) {
+                        Text("全部歌手")
+                    }
+                }
+                LazyRow(contentPadding = PaddingValues(horizontal = 16.dp)) {
+                    items(content.topArtists) {
+                        Column(
+                            modifier = Modifier
+                                .width(100.dp)
+                                .clickable(enabled = true) {
+
+                                }
+                                .padding(16.dp),
+                            verticalArrangement = Arrangement.spacedBy(8.dp),
+                            horizontalAlignment = Alignment.CenterHorizontally
+                        ) {
+                            AsyncImage(
+                                model = it.avatar,
+                                contentDescription = null,
+                                modifier = Modifier
+                                    .size(64.dp)
+                                    .clip(
+                                        CircleShape
+                                    )
+                            )
+                            Text(it.name, maxLines = 1)
+                        }
+                    }
+                }
+            }
+        }
+
         if (content.videos.isNotEmpty()) {
             item {
-                SectionTitle("推荐视频")
+                SectionTitle("推荐视频") {
+                    TextButton(onClick = {}) {
+                        Text("全部MV")
+                    }
+                }
                 LazyRow(
                     contentPadding = PaddingValues(horizontal = 16.dp),
                     horizontalArrangement = Arrangement.spacedBy(12.dp)
@@ -216,13 +267,21 @@ private fun RecommendContent(
 }
 
 @Composable
-private fun SectionTitle(title: String) {
-    Text(
-        text = title,
-        style = MaterialTheme.typography.titleLarge,
-        fontWeight = FontWeight.Bold,
-        modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp)
-    )
+private fun SectionTitle(title: String, training: @Composable () -> Unit = {}) {
+    Row(
+        modifier = Modifier.fillMaxWidth(),
+        horizontalArrangement = Arrangement.SpaceBetween,
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        Text(
+            text = title,
+            style = MaterialTheme.typography.titleLarge,
+            fontWeight = FontWeight.Bold,
+            modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp)
+        )
+
+        training()
+    }
 }
 
 @Composable
@@ -247,15 +306,15 @@ private fun RecommendItem(
             contentScale = ContentScale.Crop
         )
 
-        if(title != null)
-        Text(
-            text = title,
-            style = MaterialTheme.typography.bodyMedium,
-            minLines = 2,
-            maxLines = 2,
-            overflow = TextOverflow.Ellipsis,
-            modifier = Modifier.padding(top = 8.dp)
-        )
+        if (title != null)
+            Text(
+                text = title,
+                style = MaterialTheme.typography.bodyMedium,
+                minLines = 2,
+                maxLines = 2,
+                overflow = TextOverflow.Ellipsis,
+                modifier = Modifier.padding(top = 8.dp)
+            )
     }
 }
 

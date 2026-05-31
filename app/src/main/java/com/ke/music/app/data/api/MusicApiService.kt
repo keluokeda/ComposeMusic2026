@@ -129,4 +129,31 @@ interface MusicApiService {
      */
     @GET("mine")
     suspend fun mine(): BaseVO<MineVO>
+
+    /**
+     * 当前用户的状态
+     */
+    @GET("user/current/status")
+    suspend fun userStatus(): BaseVO<UserStatusVO>
+
+    /**
+     * 更新用户状态
+     */
+    @PUT("user/current/status")
+    suspend fun updateUserStatus(
+        @Query("content") content: String,
+        @Query("type") type: String,
+        @Query("iconUrl") iconUrl: String,
+        @Query("actionUrl") actionUrl: String?
+    ): BaseVO<SameStatusUserResponse>
+
+    @GET("playlist/top")
+    suspend fun topPlaylists(
+        @Query("category") category: String? = null,
+        @Query("before") before: Long = 0,
+        @Query("limit") limit: Int = 50,
+    ): BaseListVO<Playlist>
+
+    @GET("playlist/top/tags")
+    suspend fun topPlaylistTags(): BaseVO<List<String>>
 }
