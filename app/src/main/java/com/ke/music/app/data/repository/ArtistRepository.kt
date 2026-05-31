@@ -10,5 +10,13 @@ import javax.inject.Singleton
 class ArtistRepository @Inject constructor(
     private val apiService: MusicApiService
 ) {
-    suspend fun getArtistDetail(id: Long): BaseVO<ArtistDetailVO> = safeApiCall { apiService.getArtistDetail(id) }
+    suspend fun getArtistDetail(id: Long): BaseVO<ArtistDetailVO> =
+        safeApiCall { apiService.getArtistDetail(id) }
+
+    suspend fun artists(
+        type: Int,
+        area: Int,
+        index: Int,
+        size: Int = 20
+    ) = apiService.artists(type, area, index, size)
 }

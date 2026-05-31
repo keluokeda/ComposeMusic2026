@@ -33,4 +33,7 @@ sealed interface Destination : NavKey {
 
     @Serializable
     data object TopPlaylists: Destination
+
+    @Serializable
+    data object Artists: Destination
 }

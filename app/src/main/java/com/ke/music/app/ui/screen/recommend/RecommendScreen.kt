@@ -207,7 +207,9 @@ private fun RecommendContent(
         if (content.topArtists.isNotEmpty()) {
             item {
                 SectionTitle("热门歌手") {
-                    TextButton(onClick = {}) {
+                    TextButton(onClick = {
+                        navigate(Destination.Artists)
+                    }) {
                         Text("全部歌手")
                     }
                 }

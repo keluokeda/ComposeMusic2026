@@ -156,4 +156,12 @@ interface MusicApiService {
 
     @GET("playlist/top/tags")
     suspend fun topPlaylistTags(): BaseVO<List<String>>
+
+    @GET("artists")
+    suspend fun artists(
+        @Query("type") type: Int = -1,
+        @Query("area") area: Int = -1,
+        @Query("index") index: Int = 1,
+        @Query("size") size: Int = 20
+    ): BaseListVO<Artist>
 }

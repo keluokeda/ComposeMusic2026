@@ -11,6 +11,7 @@ import androidx.navigation3.runtime.rememberNavBackStack
 import androidx.navigation3.runtime.rememberSaveableStateHolderNavEntryDecorator
 import androidx.navigation3.ui.NavDisplay
 import com.ke.music.app.ui.navigation.Destination
+import com.ke.music.app.ui.screen.artists.ArtistsRoute
 import com.ke.music.app.ui.screen.comments.CommentsRoute
 import com.ke.music.app.ui.screen.comments.CommentsViewModel
 import com.ke.music.app.ui.screen.login.LoginRoute
@@ -103,6 +104,14 @@ class MainActivity : ComponentActivity() {
 
                         entry<Destination.TopPlaylists> {
                             TopPlaylistsRoute(onBack = {
+                                controller.removeLastOrNull()
+                            }) {
+                                controller.add(it)
+                            }
+                        }
+
+                        entry<Destination.Artists> {
+                            ArtistsRoute(onBack = {
                                 controller.removeLastOrNull()
                             }) {
                                 controller.add(it)
