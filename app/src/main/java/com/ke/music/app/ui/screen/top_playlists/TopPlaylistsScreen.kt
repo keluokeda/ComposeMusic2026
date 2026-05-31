@@ -79,7 +79,11 @@ private fun TopPlaylistsScreen(
                 .padding(paddingValues)
         ) {
             if (tags.isNotEmpty()) {
-                LazyRow(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(16.dp)) {
+                LazyRow(
+                    modifier = Modifier.fillMaxWidth(),
+                    contentPadding = PaddingValues(horizontal = 16.dp),
+                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
                     items(tags) {
                         InputChip(
                             selected = selectedTag == it,
