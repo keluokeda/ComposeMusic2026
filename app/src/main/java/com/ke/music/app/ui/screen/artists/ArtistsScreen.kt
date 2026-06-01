@@ -58,7 +58,7 @@ fun ArtistsRoute(
             artists.refresh()
         }) {
         // 跳转到歌手详情
-//        navigate(Destination.ArtistDetail(it.id))
+        navigate(Destination.ArtistDetail(it.id))
     }
 }
 

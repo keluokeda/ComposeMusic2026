@@ -4,6 +4,8 @@ import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.ui.Modifier
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.viewmodel.navigation3.rememberViewModelStoreNavEntryDecorator
 import androidx.navigation3.runtime.entryProvider
@@ -11,12 +13,15 @@ import androidx.navigation3.runtime.rememberNavBackStack
 import androidx.navigation3.runtime.rememberSaveableStateHolderNavEntryDecorator
 import androidx.navigation3.ui.NavDisplay
 import com.ke.music.app.ui.navigation.Destination
+import com.ke.music.app.ui.screen.artist_detail.ArtistDetailRoute
+import com.ke.music.app.ui.screen.artist_detail.ArtistDetailViewModel
+import com.ke.music.app.ui.screen.artist_fans.ArtistFansRoute
+import com.ke.music.app.ui.screen.artist_fans.ArtistFansViewModel
 import com.ke.music.app.ui.screen.artists.ArtistsRoute
 import com.ke.music.app.ui.screen.comments.CommentsRoute
 import com.ke.music.app.ui.screen.comments.CommentsViewModel
 import com.ke.music.app.ui.screen.login.LoginRoute
 import com.ke.music.app.ui.screen.main.MainRoute
-import com.ke.music.app.ui.screen.message.MessageRoute
 import com.ke.music.app.ui.screen.notification.comment.NotificationCommentRoute
 import com.ke.music.app.ui.screen.notification.notices.NoticesRoute
 import com.ke.music.app.ui.screen.playlist.PlaylistDetailRoute
@@ -32,11 +37,13 @@ class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
+        androidx.core.view.WindowCompat.setDecorFitsSystemWindows(window, false)
         setContent {
             MusicTheme {
                 val controller = rememberNavBackStack(Destination.Splash)
 
                 NavDisplay(
+                    modifier = Modifier.fillMaxSize(),
                     backStack = controller,
                     onBack = { if (controller.size > 1) controller.removeLastOrNull() },
                     entryProvider = entryProvider {
@@ -115,6 +122,32 @@ class MainActivity : ComponentActivity() {
                                 controller.removeLastOrNull()
                             }) {
                                 controller.add(it)
+                            }
+                        }
+
+                        entry<Destination.ArtistDetail> {
+                            val viewModel =
+                                hiltViewModel<ArtistDetailViewModel, ArtistDetailViewModel.Factory>(
+                                    creationCallback = { factory ->
+                                        factory.create(it.id)
+                                    }
+                                )
+                            ArtistDetailRoute(viewModel, onBack = {
+                                controller.removeLastOrNull()
+                            }) {destination -> controller.add(destination) }
+                        }
+
+                        entry<Destination.ArtistFans> {
+                            val viewModel =
+                                hiltViewModel<ArtistFansViewModel, ArtistFansViewModel.Factory>(
+                                    creationCallback = { factory ->
+                                        factory.create(it.id)
+                                    }
+                                )
+                            ArtistFansRoute(viewModel, onBack = {
+                                controller.removeLastOrNull()
+                            }) { destination ->
+                                controller.add(destination)
                             }
                         }
 

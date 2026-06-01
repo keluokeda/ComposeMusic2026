@@ -219,7 +219,7 @@ private fun RecommendContent(
                             modifier = Modifier
                                 .width(100.dp)
                                 .clickable(enabled = true) {
-
+                                    navigate(Destination.ArtistDetail(it.id))
                                 }
                                 .padding(16.dp),
                             verticalArrangement = Arrangement.spacedBy(8.dp),

@@ -71,8 +71,22 @@ interface MusicApiService {
     @GET("song/{id}")
     suspend fun songDetail(@Path("id") id: Long): BaseVO<SongDetailVO>
 
+    /**
+     * 歌手详情
+     */
     @GET("artist/{id}")
     suspend fun getArtistDetail(@Path("id") id: Long): BaseVO<ArtistDetailVO>
+
+    /**
+     * 歌手粉丝
+     */
+    @GET("artist/{id}/fans")
+    suspend fun artistFans(
+        @Path("id") id: Long,
+        @Query("index") index: Int,
+        @Query("size") size: Int = 20
+    ): BaseVO<List<ArtistFansResponse>>
+
 
     @GET("album/{id}")
     suspend fun albumDetail(@Path("id") id: Long): BaseVO<AlbumDetailVO>

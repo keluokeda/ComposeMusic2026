@@ -13,6 +13,8 @@ class ArtistRepository @Inject constructor(
     suspend fun getArtistDetail(id: Long): BaseVO<ArtistDetailVO> =
         safeApiCall { apiService.getArtistDetail(id) }
 
+    suspend fun artistFans(id: Long, index: Int) = apiService.artistFans(id, index)
+
     suspend fun artists(
         type: Int,
         area: Int,

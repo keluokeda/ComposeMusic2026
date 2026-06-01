@@ -212,15 +212,77 @@ data class CommentVO(
     val replyCount: Int
 )
 
+//@Serializable
+//data class ArtistDetailVO(
+//    val artist: Artist,
+//    val hotSongs: List<Song>,
+//    val desc: ArtistDescResponse,
+//    val simiArtists: List<Artist>,
+//    val mvs: List<MvVO>,
+//    val hotAlbums: List<Album>
+//)
+
 @Serializable
 data class ArtistDetailVO(
     val artist: Artist,
     val hotSongs: List<Song>,
-    val desc: ArtistDescResponse,
+    val detail: ArtistDetailResponse,
     val simiArtists: List<Artist>,
     val mvs: List<MvVO>,
-    val hotAlbums: List<Album>
-)
+    val hotAlbums: List<Album>,
+    val fansCount: Long,
+    val followed: Boolean
+) {
+
+    @Serializable
+    data class ArtistDetailResponse(
+        val videoCount: Int,
+        val identify: ArtistIdentify,
+        val artist: ArtistDetail,
+        val blacklist: Boolean,
+        val preferShow: Int,
+        val showPriMsg: Boolean,
+        val secondaryExpertIdentiy: List<ExpertIdentity>,
+    )
+
+    @Serializable
+    data class ArtistIdentify(
+//        val imageUrl: String,
+        val imageDesc: String,
+        val actionUrl: String,
+    )
+
+    @Serializable
+    data class ArtistDetail(
+        val id: Long,
+        val cover: String,
+        val avatar: String,
+        val name: String,
+        val transNames: List<String>,
+        val alias: List<String>,
+        val identities: List<String>,
+//        val identifyTag: String?,
+        val briefDesc: String,
+        val rank: ArtistRank?,
+        val albumSize: Int,
+        val musicSize: Int,
+        val mvSize: Int,
+    )
+
+    @Serializable
+    data class ArtistRank(
+        val rank: Int,
+        val type: Int,
+    )
+
+    @Serializable
+    data class ExpertIdentity(
+        val expertIdentiyId: Long,
+        val expertIdentiyName: String,
+        val expertIdentiyCount: Int,
+    )
+
+}
 
 @Serializable
 data class ArtistDescResponse(
@@ -569,7 +631,7 @@ data class MineVO(
     val userAccount: UserAccountResponse,
 //    val supportStatusList: List<UserSupportStatus>,
     val currentStatus: UserSupportStatus?
-){
+) {
 
 //    @Serializable
 //    data class UserCurrentStatusResponse(
@@ -764,6 +826,7 @@ data class MineVO(
             val avatarDetail: String? = null
         )
     }
+
     @Serializable
     data class UserSupportStatus(
         val type: String,
@@ -815,5 +878,19 @@ data class SameStatusUserResponse(
         val name: String,
         val match: Boolean,
         val id: Long? = null
+    )
+}
+
+@Serializable
+data class ArtistFansResponse(
+    val userProfile: UserProfile
+) {
+    @Serializable
+    data class UserProfile(
+        val nickname: String,
+        val avatarUrl: String,
+        val signature: String? = null,
+        val followed: Boolean,
+        val userId: Long
     )
 }
