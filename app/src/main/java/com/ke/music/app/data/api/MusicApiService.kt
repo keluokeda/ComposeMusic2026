@@ -178,4 +178,13 @@ interface MusicApiService {
         @Query("index") index: Int = 1,
         @Query("size") size: Int = 20
     ): BaseListVO<Artist>
+
+    /**
+     * 全部动态
+     */
+    @GET("events")
+    suspend fun notes(
+        @Query("lastTime") lastTime: Long,
+        @Query("pageSize") pageSize: Int = 20
+    ): BaseListVO<EventVO>
 }

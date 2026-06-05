@@ -1,35 +1,67 @@
 package com.ke.music.app.ui.screen.main
 
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.BoxWithConstraints
+import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.Message
+import androidx.compose.material.icons.automirrored.filled.Notes
 import androidx.compose.material.icons.filled.Home
 import androidx.compose.material.icons.filled.LibraryMusic
+import androidx.compose.material.icons.filled.Pause
 import androidx.compose.material.icons.filled.Person
+import androidx.compose.material.icons.filled.PlayArrow
+import androidx.compose.material.icons.filled.SkipNext
+import androidx.compose.material.icons.filled.SkipPrevious
+import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.NavigationBar
 import androidx.compose.material3.NavigationBarItem
 import androidx.compose.material3.NavigationRail
 import androidx.compose.material3.NavigationRailItem
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.unit.dp
+import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
+import androidx.media3.common.MediaMetadata
+import androidx.media3.common.Player
 import androidx.navigation3.runtime.NavBackStack
 import androidx.navigation3.runtime.NavKey
 import androidx.navigation3.runtime.entryProvider
 import androidx.navigation3.runtime.rememberNavBackStack
 import androidx.navigation3.ui.NavDisplay
+import coil3.compose.AsyncImage
+import com.ke.music.app.MusicViewModel
 import com.ke.music.app.ui.components.ScreenSize
 import com.ke.music.app.ui.components.screenSize
 import com.ke.music.app.ui.navigation.Destination
 import com.ke.music.app.ui.screen.message.MessageRoute
 import com.ke.music.app.ui.screen.mine.MineRoute
 import com.ke.music.app.ui.screen.my_playlists.MyPlaylistsRoute
+import com.ke.music.app.ui.screen.notes.NotesRoute
 import com.ke.music.app.ui.screen.recommend.RecommendRoute
 import kotlinx.serialization.Serializable
 
@@ -39,10 +71,13 @@ sealed interface MainTab : NavKey {
     data object Recommend : MainTab
 
     @Serializable
-    data object MyPlaylists: MainTab
+    data object MyPlaylists : MainTab
 
     @Serializable
     data object Message : MainTab
+
+    @Serializable
+    data object Notes : MainTab
 
     @Serializable
     data object Mine : MainTab
@@ -50,11 +85,13 @@ sealed interface MainTab : NavKey {
 
 
 @Composable
-fun MainRoute(navigate: (Destination) -> Unit) {
+fun MainRoute(musicViewModel: MusicViewModel,navigate: (Destination) -> Unit) {
     // 内部导航使用的 BackStack
     val subController = rememberNavBackStack(MainTab.Recommend)
     // 获取当前选中的 tab
     val currentTab = subController.last() as MainTab
+
+//    val musicViewModel = hiltViewModel<MusicViewModel>()
 
     BoxWithConstraints {
         val screenSize = maxWidth.screenSize()
@@ -63,19 +100,25 @@ fun MainRoute(navigate: (Destination) -> Unit) {
             // 手机端使用 NavigationBar
             Scaffold(
                 bottomBar = {
-                    MainNavigationBar(
-                        currentTab = currentTab,
-                        onTabSelected = { tab ->
-                            subController.clear()
-                            subController.add(tab)
-                        }
-                    )
+                    Column {
+                        BottomPlayerBar(musicViewModel, navigate)
+                        MainNavigationBar(
+                            currentTab = currentTab,
+                            onTabSelected = { tab ->
+                                subController.clear()
+                                subController.add(tab)
+                            }
+                        )
+                    }
                 }
             ) { padding ->
                 MainContent(
                     modifier = Modifier.padding(bottom = padding.calculateBottomPadding()),
                     subController = subController,
-                    navigate = navigate
+                    navigate = navigate,
+                    playSong = {
+                        musicViewModel.playNow(it)
+                    }
                 )
             }
         } else {
@@ -88,11 +131,121 @@ fun MainRoute(navigate: (Destination) -> Unit) {
                         subController.add(tab)
                     }
                 )
-                MainContent(
-                    modifier = Modifier.weight(1f),
-                    subController = subController,
-                    navigate = navigate
+                Scaffold(
+                    bottomBar = {
+                        BottomPlayerBar(musicViewModel, navigate)
+                    }
+                ) { padding ->
+                    MainContent(
+                        modifier = Modifier
+                            .fillMaxSize()
+                            .padding(bottom = padding.calculateBottomPadding()),
+                        subController = subController,
+                        navigate = navigate,
+                        playSong = {
+                            musicViewModel.playNow(it)
+                        }
+                    )
+                }
+            }
+        }
+    }
+}
+
+@Composable
+private fun BottomPlayerBar(
+    musicViewModel: MusicViewModel,
+    navigate: (Destination) -> Unit
+) {
+    val player = musicViewModel.musicPlayer.player ?: return
+    var currentMediaMetadata by remember { mutableStateOf<MediaMetadata?>(player.mediaMetadata) }
+    var isPlaying by remember { mutableStateOf(player.isPlaying) }
+    var hasMediaItem by remember { mutableStateOf(player.currentMediaItem != null) }
+
+    DisposableEffect(player) {
+        val listener = object : Player.Listener {
+            override fun onMediaMetadataChanged(mediaMetadata: MediaMetadata) {
+                currentMediaMetadata = mediaMetadata
+            }
+
+            override fun onIsPlayingChanged(playing: Boolean) {
+                isPlaying = playing
+            }
+
+            override fun onEvents(player: Player, events: Player.Events) {
+                hasMediaItem = player.currentMediaItem != null
+                if (events.contains(Player.EVENT_MEDIA_METADATA_CHANGED)) {
+                    currentMediaMetadata = player.mediaMetadata
+                }
+            }
+        }
+        player.addListener(listener)
+        onDispose {
+            player.removeListener(listener)
+        }
+    }
+
+    if (!hasMediaItem) return
+
+    Surface(
+        modifier = Modifier
+            .fillMaxWidth()
+            .clickable { navigate(Destination.Player) },
+        color = MaterialTheme.colorScheme.surfaceVariant,
+        tonalElevation = 4.dp
+    ) {
+        Column {
+            HorizontalDivider()
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 16.dp, vertical = 8.dp),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                AsyncImage(
+                    model = currentMediaMetadata?.artworkUri,
+                    contentDescription = null,
+                    modifier = Modifier
+                        .size(40.dp)
+                        .clip(MaterialTheme.shapes.small),
+                    contentScale = ContentScale.Crop
                 )
+
+                Spacer(modifier = Modifier.width(12.dp))
+
+                Column(modifier = Modifier.weight(1f)) {
+                    Text(
+                        text = currentMediaMetadata?.title?.toString() ?: "未知歌曲",
+                        style = MaterialTheme.typography.bodyMedium,
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis
+                    )
+                    Text(
+                        text = currentMediaMetadata?.artist?.toString() ?: "未知歌手",
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis
+                    )
+                }
+
+                IconButton(onClick = { musicViewModel.musicPlayer.skipToPrevious() }) {
+                    Icon(Icons.Default.SkipPrevious, contentDescription = null)
+                }
+
+                IconButton(onClick = {
+                    if (isPlaying) musicViewModel.musicPlayer.pause()
+                    else musicViewModel.musicPlayer.resume()
+                }) {
+                    Icon(
+                        if (isPlaying) Icons.Default.Pause else Icons.Default.PlayArrow,
+                        contentDescription = null
+                    )
+                }
+
+                IconButton(onClick = { musicViewModel.musicPlayer.skipToNext() }) {
+                    Icon(Icons.Default.SkipNext, contentDescription = null)
+                }
             }
         }
     }
@@ -102,14 +255,15 @@ fun MainRoute(navigate: (Destination) -> Unit) {
 private fun MainContent(
     modifier: Modifier = Modifier,
     subController: NavBackStack<out NavKey>,
-    navigate: (Destination) -> Unit
+    navigate: (Destination) -> Unit,
+    playSong:(Long)-> Unit
 ) {
     NavDisplay(
         modifier = modifier,
         backStack = subController,
         entryProvider = entryProvider {
             entry<MainTab.Recommend> {
-                RecommendRoute(navigate)
+                RecommendRoute(playSong,navigate)
             }
             entry<MainTab.Message> {
                 MessageRoute { destination ->
@@ -122,6 +276,11 @@ private fun MainContent(
                     navigate(Destination.PlaylistDetail(it))
                 }
             }
+
+            entry<MainTab.Notes> {
+                NotesRoute(navigate)
+            }
+
             entry<MainTab.Mine> {
                 MineRoute(navigate)
             }
@@ -154,6 +313,14 @@ private fun MainNavigationBar(
             icon = { Icon(Icons.Default.LibraryMusic, null) },
             label = { Text("歌单") }
         )
+
+        NavigationBarItem(
+            selected = currentTab is MainTab.Notes,
+            onClick = { onTabSelected(MainTab.Notes) },
+            icon = { Icon(Icons.AutoMirrored.Filled.Notes, null) },
+            label = { Text("笔记") }
+        )
+
         NavigationBarItem(
             selected = currentTab is MainTab.Mine,
             onClick = { onTabSelected(MainTab.Mine) },
@@ -188,6 +355,14 @@ private fun MainNavigationRail(
             icon = { Icon(Icons.Default.LibraryMusic, null) },
             label = { Text("歌单") }
         )
+
+        NavigationRailItem(
+            selected = currentTab is MainTab.Notes,
+            onClick = { onTabSelected(MainTab.Notes) },
+            icon = { Icon(Icons.AutoMirrored.Filled.Notes, null) },
+            label = { Text("笔记") }
+        )
+
         NavigationRailItem(
             selected = currentTab is MainTab.Mine,
             onClick = { onTabSelected(MainTab.Mine) },

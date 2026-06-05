@@ -42,4 +42,7 @@ sealed interface Destination : NavKey {
 
     @Serializable
     data class ArtistFans(val id: Long): Destination
+
+    @Serializable
+    data object Player : Destination
 }

@@ -25,19 +25,16 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.automirrored.filled.Comment
 import androidx.compose.material.icons.filled.Book
-import androidx.compose.material.icons.filled.Comment
 import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material.icons.filled.Share
 import androidx.compose.material.icons.outlined.Book
 import androidx.compose.material3.AlertDialog
-import androidx.compose.material3.BasicAlertDialog
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.ListItem
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
-import androidx.compose.material3.OutlinedIconButton
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
@@ -57,11 +54,12 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.tooling.preview.PreviewLightDark
 import androidx.compose.ui.unit.dp
 import coil3.compose.AsyncImage
-import com.ke.music.app.data.model.Mock
+import com.ke.music.app.MusicViewModel
 import com.ke.music.app.data.model.Mock.dynamic
 import com.ke.music.app.data.model.Mock.playlist
 import com.ke.music.app.data.model.Mock.songs
 import com.ke.music.app.data.model.PlaylistDetailVO
+import com.ke.music.app.data.model.Song
 import com.ke.music.app.format
 import com.ke.music.app.ui.components.LoadingView
 import com.ke.music.app.ui.components.RetryView
@@ -75,6 +73,7 @@ import com.ke.music.app.ui.theme.MusicTheme
 @Composable
 fun PlaylistDetailRoute(
     viewModel: PlaylistDetailViewModel,
+    musicViewModel: MusicViewModel,
     onBack: () -> Unit,
     navigate: (Destination) -> Unit
 ) {
@@ -82,12 +81,16 @@ fun PlaylistDetailRoute(
         mutableStateOf<String?>(null)
     }
 
+
+
     PlaylistDetailScreen(uiState = viewModel.uiState, retry = {
         viewModel.loadDetail()
     }, onBack = onBack, clickDescription = {
         description = it
     }, toComments = {
         navigate(Destination.Comments(2, viewModel.id))
+    }, play = {
+        musicViewModel.playNow(it.id)
     })
 
     if (description != null) {
@@ -117,7 +120,8 @@ private fun PlaylistDetailScreen(
     toComments: () -> Unit = {},
     clickBook: () -> Unit = {},
     retry: () -> Unit = {},
-    clickDescription: (String) -> Unit = {}
+    clickDescription: (String) -> Unit = {},
+    play:(Song)-> Unit
 ) {
 
     when (uiState) {
@@ -196,13 +200,16 @@ private fun PlaylistDetailScreen(
                         PlaylistDetailCompact(
                             uiState,
                             clickDescription = clickDescription,
-                            toComments = toComments
+                            toComments = toComments,
+                            play = play
                         )
                     } else {
                         PlaylistDetailMedium(
                             uiState,
                             clickDescription = clickDescription,
-                            toComments = toComments
+                            toComments = toComments,
+                            play = play
+
                         )
                     }
 
@@ -231,7 +238,7 @@ private fun PlaylistDetailMediumPreview() {
                     .fillMaxSize()
                     .padding(paddingValues)
             ) {
-                PlaylistDetailMedium(uiState = successState)
+                PlaylistDetailMedium(uiState = successState,)
             }
         }
     }
@@ -241,7 +248,8 @@ private fun PlaylistDetailMediumPreview() {
 private fun PlaylistDetailMedium(
     uiState: PlaylistDetailViewModel.UiState.Success,
     clickDescription: (String) -> Unit = {},
-    toComments: () -> Unit = {}
+    toComments: () -> Unit = {},
+    play: (Song) -> Unit = {}
 ) {
 
     Row(modifier = Modifier.fillMaxSize()) {
@@ -349,6 +357,8 @@ private fun PlaylistDetailMedium(
                     },
                     supportingContent = {
                         Text(it.subTitle, maxLines = 1)
+                    }, modifier = Modifier.clickable(true){
+                        play(it)
                     }
                 )
             }
@@ -360,7 +370,8 @@ private fun PlaylistDetailMedium(
 private fun PlaylistDetailCompact(
     uiState: PlaylistDetailViewModel.UiState.Success,
     clickDescription: (String) -> Unit = {},
-    toComments: () -> Unit = {}
+    toComments: () -> Unit = {},
+    play:(Song)-> Unit = {}
 ) {
     LazyColumn(
         modifier = Modifier.fillMaxSize(),
@@ -502,6 +513,8 @@ private fun PlaylistDetailCompact(
                 },
                 supportingContent = {
                     Text(it.subTitle, maxLines = 1)
+                }, modifier = Modifier.clickable(true){
+                    play(it)
                 }
             )
         }

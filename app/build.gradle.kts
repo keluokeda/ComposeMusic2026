@@ -101,6 +101,14 @@ dependencies {
     // Jetpack Compose integration
     implementation("androidx.paging:paging-compose:$paging_version")
 
+
+
+    val media3_version = "1.10.1"
+
+    // For media playback using ExoPlayer
+    implementation("androidx.media3:media3-exoplayer:$media3_version")
+    implementation("androidx.media3:media3-session:$media3_version")
+
     testImplementation(libs.junit)
     androidTestImplementation(platform(libs.androidx.compose.bom))
     androidTestImplementation(libs.androidx.compose.ui.test.junit4)

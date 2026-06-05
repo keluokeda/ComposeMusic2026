@@ -1,6 +1,7 @@
 package com.ke.music.app.ui.screen.artist_detail
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxWithConstraints
@@ -50,6 +51,7 @@ import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.unit.dp
 import coil3.compose.AsyncImage
+import com.ke.music.app.MusicViewModel
 import com.ke.music.app.format
 import com.ke.music.app.ui.components.LoadingView
 import com.ke.music.app.ui.components.RetryView
@@ -64,6 +66,7 @@ private val tabs = listOf("简介", "歌曲", "专辑", "视频", "相似歌手"
 @Composable
 fun ArtistDetailRoute(
     viewModel: ArtistDetailViewModel,
+    musicViewModel: MusicViewModel,
     onBack: () -> Unit,
     navigate: (Destination) -> Unit
 ) {
@@ -76,7 +79,10 @@ fun ArtistDetailRoute(
         onTabClick = {
             viewModel.selectedTabIndex = it
         },
-        navigate = navigate
+        navigate = navigate,
+        play = {
+            musicViewModel.playNow(it)
+        }
     )
 }
 
@@ -88,7 +94,8 @@ private fun ArtistDetailScreen(
     onBack: () -> Unit,
     selectedTabIndex: Int,
     onTabClick: (Int) -> Unit,
-    navigate: (Destination) -> Unit
+    navigate: (Destination) -> Unit,
+    play:(Long)-> Unit
 ) {
     val scrollState = rememberLazyListState()
     val density = LocalDensity.current
@@ -257,6 +264,9 @@ private fun ArtistDetailScreen(
                                                 contentDescription = null,
                                                 modifier = Modifier.size(40.dp)
                                             )
+                                        },
+                                        modifier = Modifier.clickable(true){
+                                            play(it.id)
                                         }
                                     )
                                 }
@@ -516,6 +526,9 @@ private fun ArtistDetailScreen(
                                                         contentDescription = null,
                                                         modifier = Modifier.size(40.dp)
                                                     )
+                                                },
+                                                modifier = Modifier.clickable(true){
+                                                    play(it.id)
                                                 }
                                             )
                                         }

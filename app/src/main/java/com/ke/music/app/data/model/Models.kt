@@ -1,5 +1,6 @@
 package com.ke.music.app.data.model
 
+import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 
 @Serializable
@@ -892,5 +893,73 @@ data class ArtistFansResponse(
         val signature: String? = null,
         val followed: Boolean,
         val userId: Long
+    )
+}
+
+@Serializable
+data class EventVO(
+    val user: User,
+    val eventTime: Long,
+    val pics: List<String>,
+    val bottomTags: List<EventTag>,
+    val eventJson: EventJson,
+) {
+
+
+    @Serializable
+    data class EventTag(
+        val id: String,
+        val name: String
+    )
+
+    @Serializable
+    data class EventJson(
+        val title: String,
+//        @SerialName("msg")
+        val message: String,
+        val song: EventSong? = null,
+        val album: EventAlbumRoot? = null,
+        val playlist: EventPlaylist? = null,
+    )
+
+    @Serializable
+    data class EventPlaylist(
+        val id: String,
+        val name: String,
+        val coverImgUrl: String,
+        val creator: User
+    )
+
+    @Serializable
+    data class EventAlbumRoot(
+        val artist: EventArtist,
+        val name: String,
+        val type: String,
+        val picUrl: String,
+        val id: Long,
+    )
+
+    @Serializable
+    data class EventSong(
+        val name: String,
+        val id: Long,
+        val artists: List<EventArtist>,
+        val album: EventAlbum
+    )
+
+    @Serializable
+    data class EventArtist(
+        val name: String,
+        val id: Long,
+//        @SerialName("img1v1Url")
+        val imageUrl: String,
+    )
+
+    @Serializable
+    data class EventAlbum(
+        val name: String,
+        val id: Long,
+        val type: String,
+        val picUrl: String,
     )
 }

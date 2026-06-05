@@ -45,6 +45,7 @@ import com.ke.music.app.ui.navigation.Destination
 
 @Composable
 fun RecommendRoute(
+    playSong:(Long)-> Unit,
     navigate: (Destination) -> Unit
 ) {
 
@@ -55,7 +56,8 @@ fun RecommendRoute(
         uiState = uiState,
         isRefreshing = viewModel.isRefreshing,
         navigate = navigate,
-        refresh = { viewModel.refresh() }
+        refresh = { viewModel.refresh() },
+        playSong
     )
 }
 
@@ -65,7 +67,8 @@ private fun RecommendScreen(
     uiState: RecommendViewModel.UiState,
     isRefreshing: Boolean,
     navigate: (Destination) -> Unit,
-    refresh: () -> Unit
+    refresh: () -> Unit,
+    playSong: (Long) -> Unit
 ) {
     Scaffold(topBar = {
         TopAppBar(title = { Text("推荐") })
@@ -84,7 +87,7 @@ private fun RecommendScreen(
                         onRefresh = refresh,
                         modifier = Modifier.fillMaxSize()
                     ) {
-                        RecommendContent(uiState.content, navigate)
+                        RecommendContent(uiState.content, navigate,playSong)
                     }
                 }
             }
@@ -95,7 +98,8 @@ private fun RecommendScreen(
 @Composable
 private fun RecommendContent(
     content: RecommendVO,
-    navigate: (Destination) -> Unit
+    navigate: (Destination) -> Unit,
+    playSong: (Long) -> Unit
 ) {
     LazyColumn(
         modifier = Modifier.fillMaxSize(),
@@ -166,7 +170,7 @@ private fun RecommendContent(
                             subtitle = item.song.artists.joinToString("/") { it.name },
                             imageUrl = item.picUrl,
                             onClick = {
-
+                                playSong(item.id)
                             }
                         )
                     }
@@ -196,7 +200,7 @@ private fun RecommendContent(
                             subtitle = song.artists.joinToString("/") { it.name },
                             imageUrl = song.album.imageUrl,
                             onClick = {
-
+                                playSong(song.id)
                             }
                         )
                     }
