@@ -18,7 +18,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
@@ -89,8 +89,11 @@ fun PlaylistDetailRoute(
         description = it
     }, toComments = {
         navigate(Destination.Comments(2, viewModel.id))
-    }, play = {
-        musicViewModel.playNow(it.id)
+    }, play = { index ->
+        if (viewModel.uiState is PlaylistDetailViewModel.UiState.Success) {
+            val songs = (viewModel.uiState as PlaylistDetailViewModel.UiState.Success).response.songs
+            musicViewModel.playSongs(songs, index)
+        }
     })
 
     if (description != null) {
@@ -121,7 +124,7 @@ private fun PlaylistDetailScreen(
     clickBook: () -> Unit = {},
     retry: () -> Unit = {},
     clickDescription: (String) -> Unit = {},
-    play:(Song)-> Unit
+    play: (Int) -> Unit
 ) {
 
     when (uiState) {
@@ -249,7 +252,7 @@ private fun PlaylistDetailMedium(
     uiState: PlaylistDetailViewModel.UiState.Success,
     clickDescription: (String) -> Unit = {},
     toComments: () -> Unit = {},
-    play: (Song) -> Unit = {}
+    play: (Int) -> Unit = {}
 ) {
 
     Row(modifier = Modifier.fillMaxSize()) {
@@ -336,9 +339,9 @@ private fun PlaylistDetailMedium(
                 .weight(1f)
                 .fillMaxHeight()
         ) {
-            items(uiState.response.songs, {
+            itemsIndexed(uiState.response.songs, { _, it ->
                 it.id
-            }) {
+            }) { index, it ->
                 ListItem(
                     headlineContent = {
                         Text(it.name, maxLines = 1)
@@ -358,7 +361,7 @@ private fun PlaylistDetailMedium(
                     supportingContent = {
                         Text(it.subTitle, maxLines = 1)
                     }, modifier = Modifier.clickable(true){
-                        play(it)
+                        play(index)
                     }
                 )
             }
@@ -371,7 +374,7 @@ private fun PlaylistDetailCompact(
     uiState: PlaylistDetailViewModel.UiState.Success,
     clickDescription: (String) -> Unit = {},
     toComments: () -> Unit = {},
-    play:(Song)-> Unit = {}
+    play: (Int) -> Unit = {}
 ) {
     LazyColumn(
         modifier = Modifier.fillMaxSize(),
@@ -492,9 +495,9 @@ private fun PlaylistDetailCompact(
             }
         }
 
-        items(uiState.response.songs, {
+        itemsIndexed(uiState.response.songs, { _, it ->
             it.id
-        }) {
+        }) { index, it ->
             ListItem(
                 headlineContent = {
                     Text(it.name, maxLines = 1)
@@ -514,7 +517,7 @@ private fun PlaylistDetailCompact(
                 supportingContent = {
                     Text(it.subTitle, maxLines = 1)
                 }, modifier = Modifier.clickable(true){
-                    play(it)
+                    play(index)
                 }
             )
         }

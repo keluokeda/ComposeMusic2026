@@ -81,7 +81,7 @@ fun ArtistDetailRoute(
         },
         navigate = navigate,
         play = {
-            musicViewModel.playNow(it)
+//            musicViewModel.playNow(it)
         }
     )
 }

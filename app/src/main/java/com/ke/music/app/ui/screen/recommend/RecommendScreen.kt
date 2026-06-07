@@ -38,17 +38,18 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import coil3.compose.AsyncImage
+import com.ke.music.app.MusicViewModel
 import com.ke.music.app.data.model.RecommendVO
+import com.ke.music.app.data.model.Song
 import com.ke.music.app.ui.components.LoadingView
 import com.ke.music.app.ui.components.RetryView
 import com.ke.music.app.ui.navigation.Destination
 
 @Composable
 fun RecommendRoute(
-    playSong:(Long)-> Unit,
+    musicViewModel: MusicViewModel,
     navigate: (Destination) -> Unit
 ) {
-
     val viewModel = hiltViewModel<RecommendViewModel>()
     val uiState = viewModel.uiState
 
@@ -57,7 +58,9 @@ fun RecommendRoute(
         isRefreshing = viewModel.isRefreshing,
         navigate = navigate,
         refresh = { viewModel.refresh() },
-        playSong
+        playSongs = { songs, i ->
+            musicViewModel.playSongs(songs, i)
+        }
     )
 }
 
@@ -68,7 +71,7 @@ private fun RecommendScreen(
     isRefreshing: Boolean,
     navigate: (Destination) -> Unit,
     refresh: () -> Unit,
-    playSong: (Long) -> Unit
+    playSongs: (List<Song>, Int) -> Unit
 ) {
     Scaffold(topBar = {
         TopAppBar(title = { Text("推荐") })
@@ -87,7 +90,7 @@ private fun RecommendScreen(
                         onRefresh = refresh,
                         modifier = Modifier.fillMaxSize()
                     ) {
-                        RecommendContent(uiState.content, navigate,playSong)
+                        RecommendContent(uiState.content, navigate, playSongs)
                     }
                 }
             }
@@ -99,7 +102,7 @@ private fun RecommendScreen(
 private fun RecommendContent(
     content: RecommendVO,
     navigate: (Destination) -> Unit,
-    playSong: (Long) -> Unit
+    playSongs: (List<Song>, Int) -> Unit
 ) {
     LazyColumn(
         modifier = Modifier.fillMaxSize(),
@@ -170,7 +173,8 @@ private fun RecommendContent(
                             subtitle = item.song.artists.joinToString("/") { it.name },
                             imageUrl = item.picUrl,
                             onClick = {
-                                playSong(item.id)
+//                                playSong(item.id)
+//                                playSongs(content.newSongs,content.newSongs.indexOf(item))
                             }
                         )
                     }
@@ -200,7 +204,8 @@ private fun RecommendContent(
                             subtitle = song.artists.joinToString("/") { it.name },
                             imageUrl = song.album.imageUrl,
                             onClick = {
-                                playSong(song.id)
+//                                playSong(song.id)
+                                playSongs(content.songs, content.songs.indexOf(song))
                             }
                         )
                     }

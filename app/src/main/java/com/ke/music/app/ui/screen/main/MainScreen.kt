@@ -34,11 +34,8 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.DisposableEffect
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -46,8 +43,6 @@ import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
-import androidx.media3.common.MediaMetadata
-import androidx.media3.common.Player
 import androidx.navigation3.runtime.NavBackStack
 import androidx.navigation3.runtime.NavKey
 import androidx.navigation3.runtime.entryProvider
@@ -115,10 +110,8 @@ fun MainRoute(musicViewModel: MusicViewModel,navigate: (Destination) -> Unit) {
                 MainContent(
                     modifier = Modifier.padding(bottom = padding.calculateBottomPadding()),
                     subController = subController,
+                    musicViewModel = musicViewModel,
                     navigate = navigate,
-                    playSong = {
-                        musicViewModel.playNow(it)
-                    }
                 )
             }
         } else {
@@ -141,10 +134,11 @@ fun MainRoute(musicViewModel: MusicViewModel,navigate: (Destination) -> Unit) {
                             .fillMaxSize()
                             .padding(bottom = padding.calculateBottomPadding()),
                         subController = subController,
+                        musicViewModel = musicViewModel,
                         navigate = navigate,
-                        playSong = {
-                            musicViewModel.playNow(it)
-                        }
+//                        playSong = {
+//                            musicViewModel.playNow(it)
+//                        }
                     )
                 }
             }
@@ -157,33 +151,10 @@ private fun BottomPlayerBar(
     musicViewModel: MusicViewModel,
     navigate: (Destination) -> Unit
 ) {
-    val player = musicViewModel.musicPlayer.player ?: return
-    var currentMediaMetadata by remember { mutableStateOf<MediaMetadata?>(player.mediaMetadata) }
-    var isPlaying by remember { mutableStateOf(player.isPlaying) }
-    var hasMediaItem by remember { mutableStateOf(player.currentMediaItem != null) }
-
-    DisposableEffect(player) {
-        val listener = object : Player.Listener {
-            override fun onMediaMetadataChanged(mediaMetadata: MediaMetadata) {
-                currentMediaMetadata = mediaMetadata
-            }
-
-            override fun onIsPlayingChanged(playing: Boolean) {
-                isPlaying = playing
-            }
-
-            override fun onEvents(player: Player, events: Player.Events) {
-                hasMediaItem = player.currentMediaItem != null
-                if (events.contains(Player.EVENT_MEDIA_METADATA_CHANGED)) {
-                    currentMediaMetadata = player.mediaMetadata
-                }
-            }
-        }
-        player.addListener(listener)
-        onDispose {
-            player.removeListener(listener)
-        }
-    }
+    val player = musicViewModel.player
+    val hasMediaItem by player.hasMediaItem.collectAsState()
+    val currentMetadata by player.currentMetadata.collectAsState()
+    val isPlaying by player.isPlaying.collectAsState()
 
     if (!hasMediaItem) return
 
@@ -203,7 +174,7 @@ private fun BottomPlayerBar(
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 AsyncImage(
-                    model = currentMediaMetadata?.artworkUri,
+                    model = currentMetadata?.artworkUrl,
                     contentDescription = null,
                     modifier = Modifier
                         .size(40.dp)
@@ -215,13 +186,13 @@ private fun BottomPlayerBar(
 
                 Column(modifier = Modifier.weight(1f)) {
                     Text(
-                        text = currentMediaMetadata?.title?.toString() ?: "未知歌曲",
+                        text = currentMetadata?.title ?: "未知歌曲",
                         style = MaterialTheme.typography.bodyMedium,
                         maxLines = 1,
                         overflow = TextOverflow.Ellipsis
                     )
                     Text(
-                        text = currentMediaMetadata?.artist?.toString() ?: "未知歌手",
+                        text = currentMetadata?.artist ?: "未知歌手",
                         style = MaterialTheme.typography.bodySmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
                         maxLines = 1,
@@ -229,13 +200,12 @@ private fun BottomPlayerBar(
                     )
                 }
 
-                IconButton(onClick = { musicViewModel.musicPlayer.skipToPrevious() }) {
+                IconButton(onClick = { player.skipToPrevious() }) {
                     Icon(Icons.Default.SkipPrevious, contentDescription = null)
                 }
 
                 IconButton(onClick = {
-                    if (isPlaying) musicViewModel.musicPlayer.pause()
-                    else musicViewModel.musicPlayer.resume()
+                    if (isPlaying) player.pause() else player.resume()
                 }) {
                     Icon(
                         if (isPlaying) Icons.Default.Pause else Icons.Default.PlayArrow,
@@ -243,7 +213,7 @@ private fun BottomPlayerBar(
                     )
                 }
 
-                IconButton(onClick = { musicViewModel.musicPlayer.skipToNext() }) {
+                IconButton(onClick = { player.skipToNext() }) {
                     Icon(Icons.Default.SkipNext, contentDescription = null)
                 }
             }
@@ -255,15 +225,15 @@ private fun BottomPlayerBar(
 private fun MainContent(
     modifier: Modifier = Modifier,
     subController: NavBackStack<out NavKey>,
+    musicViewModel: MusicViewModel,
     navigate: (Destination) -> Unit,
-    playSong:(Long)-> Unit
 ) {
     NavDisplay(
         modifier = modifier,
         backStack = subController,
         entryProvider = entryProvider {
             entry<MainTab.Recommend> {
-                RecommendRoute(playSong,navigate)
+                RecommendRoute(musicViewModel, navigate)
             }
             entry<MainTab.Message> {
                 MessageRoute { destination ->

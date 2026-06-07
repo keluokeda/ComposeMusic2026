@@ -5,6 +5,9 @@ import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.ViewModel
@@ -15,7 +18,8 @@ import androidx.navigation3.runtime.rememberNavBackStack
 import androidx.navigation3.runtime.rememberSaveableStateHolderNavEntryDecorator
 import androidx.navigation3.ui.NavDisplay
 import com.ke.music.app.data.repository.SongRepository
-import com.ke.music.app.player.MusicPlayer
+import com.ke.music.app.player.IPlayer
+import com.ke.music.app.player.IPlayerListener
 import com.ke.music.app.ui.navigation.Destination
 import com.ke.music.app.ui.screen.artist_detail.ArtistDetailRoute
 import com.ke.music.app.ui.screen.artist_detail.ArtistDetailViewModel
@@ -35,7 +39,6 @@ import com.ke.music.app.ui.screen.splash.SplashRoute
 import com.ke.music.app.ui.screen.top_playlists.TopPlaylistsRoute
 import com.ke.music.app.ui.screen.user_status.UserStatusRoute
 import com.ke.music.app.ui.theme.MusicTheme
-import com.orhanobut.logger.Logger
 import dagger.hilt.android.AndroidEntryPoint
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.launch
@@ -48,16 +51,15 @@ class MainActivity : ComponentActivity() {
 //    @Inject
 //    lateinit var musicViewModel: MusicViewModel
 
-
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
-        androidx.core.view.WindowCompat.setDecorFitsSystemWindows(window, false)
-//        Logger.d(musicViewModel.toString())
         setContent {
             MusicTheme {
+
                 val controller = rememberNavBackStack(Destination.Splash)
                 val musicViewModel = hiltViewModel<MusicViewModel>()
+
                 NavDisplay(
                     modifier = Modifier.fillMaxSize(),
                     backStack = controller,
@@ -88,18 +90,18 @@ class MainActivity : ComponentActivity() {
                                 }
                             )
                         }
-
                         entry<Destination.PlaylistDetail> {
                             val viewModel =
                                 hiltViewModel<PlaylistDetailViewModel, PlaylistDetailViewModel.Factory>(
                                     creationCallback = { factory ->
                                         factory.create(it.id)
-                                    })
+                                    }
+                                )
                             PlaylistDetailRoute(viewModel, musicViewModel, onBack = {
                                 controller.removeLastOrNull()
-                            }, {
+                            }) {
                                 controller.add(it)
-                            })
+                            }
                         }
 
                         entry<Destination.Comments> {
@@ -149,7 +151,7 @@ class MainActivity : ComponentActivity() {
                                         factory.create(it.id)
                                     }
                                 )
-                            ArtistDetailRoute(viewModel,musicViewModel, onBack = {
+                            ArtistDetailRoute(viewModel, musicViewModel, onBack = {
                                 controller.removeLastOrNull()
                             }) { destination -> controller.add(destination) }
                         }
@@ -183,47 +185,98 @@ class MainActivity : ComponentActivity() {
             }
         }
     }
-
-
 }
 
 @HiltViewModel
 class MusicViewModel @Inject constructor(
     private val songRepository: SongRepository,
-    val musicPlayer: MusicPlayer
+    val player: IPlayer
 ) : ViewModel() {
 
-    fun playNow(id: Long) {
-        viewModelScope.launch {
-            val response = songRepository.detail(id)
+    var currentLrc by mutableStateOf<String?>(null)
+        private set
 
-            if (response.success) {
-                val detail = response.data!!
-                //使用media3播放歌曲
-                if (detail.url != null) {
-                    musicPlayer.play(
-                        detail.url,
-                        detail.song.name,
-                        detail.song.artists.joinToString("/") { it.name },
-                        detail.song.album.imageUrl
-                    )
-                } else {
-                    MusicApp.toast("播放地址不存在")
-                }
-            } else {
-                MusicApp.toast(response.message)
-            }
+    var currentSongLiked by mutableStateOf(false)
+        private set
+
+    private val fetchingIds = mutableSetOf<Long>()
+
+    // 记录用户最后一次想播放的 index（main thread 同步赋值，不依赖异步 StateFlow）
+    private var intendedPlayIndex = -1
+
+    private suspend fun loadLrc(id: Long) {
+        currentLrc = null
+        val response = songRepository.lrc(id)
+        if (response.success) {
+            currentLrc = response.data
         }
     }
 
     fun playSongs(songs: List<com.ke.music.app.data.model.Song>, index: Int = 0) {
-        viewModelScope.launch {
-            // 这里为了简单，假设所有歌曲已经有了 URL，或者我们需要逐个获取
-            // 在实际项目中，通常是后台返回带 URL 的列表，或者使用拦截器处理
-            // 这里演示获取第一个 URL 并播放列表（假设其他 URL 逻辑类似）
-            val urls = songs.map { "" } // 占位，实际需要获取 URL
-            // ... 实际逻辑会更复杂，因为需要异步获取多个 URL
-            MusicApp.toast("播放列表功能已准备，需配置 URL 获取逻辑")
+        player.playSongs(songs, index)
+        fetchAndPlay(index)
+    }
+
+    fun playAtIndex(index: Int) {
+        player.playAtIndex(index)
+        if (!player.hasSongUrl(index)) {
+            fetchAndPlay(index)
         }
+    }
+
+    fun toggleLike() {
+        val index = player.currentIndex.value
+        val song = player.songs.getOrNull(index) ?: return
+        val targetLike = !currentSongLiked
+
+        viewModelScope.launch {
+            val response = songRepository.likeSong(song.id, targetLike)
+            if (response.success) {
+                currentSongLiked = targetLike
+            } else {
+                MusicApp.toast(response.message.ifEmpty { "操作失败" })
+            }
+        }
+    }
+
+    private fun fetchAndPlay(index: Int) {
+        val song = player.songs.getOrNull(index) ?: return
+        if (player.hasSongUrl(index)) return
+        if (fetchingIds.contains(song.id)) return
+        fetchingIds.add(song.id)
+        // 在 main thread 上同步记录当前意图，避免依赖异步 StateFlow 判断
+        intendedPlayIndex = index
+
+        viewModelScope.launch {
+            try {
+                loadLrc(song.id)
+                val response = songRepository.detail(song.id)
+                if (response.success && response.data?.url != null) {
+                    currentSongLiked = response.data.liked
+                    player.updateSongUrl(index, response.data.url) {
+                        // 只有用户没有切换到别的歌时才播放
+                        if (intendedPlayIndex == index) {
+                            player.startPlayback()
+                        }
+                    }
+                } else {
+                    MusicApp.toast(response.message.ifEmpty { "获取歌曲地址失败" })
+                }
+            } finally {
+                fetchingIds.remove(song.id)
+            }
+        }
+    }
+
+    init {
+        player.addListener(object : IPlayerListener {
+            override fun onMediaItemTransition(index: Int) {
+                fetchAndPlay(index)
+            }
+
+            override fun onPlayerError(index: Int) {
+                fetchAndPlay(index)
+            }
+        })
     }
 }

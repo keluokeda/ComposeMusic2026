@@ -72,6 +72,21 @@ interface MusicApiService {
     suspend fun songDetail(@Path("id") id: Long): BaseVO<SongDetailVO>
 
     /**
+     * 歌曲歌词
+     */
+    @GET("song/{id}/lrc")
+    suspend fun songLrc(@Path("id") id: Long): BaseVO<String>
+
+    /**
+     * 喜欢歌曲
+     */
+    @GET("song/{id}/like")
+    suspend fun likeSong(
+        @Path("id") id: Long,
+        @Query("like") like: Boolean
+    ): BaseVO<String>
+
+    /**
      * 歌手详情
      */
     @GET("artist/{id}")
@@ -187,4 +202,6 @@ interface MusicApiService {
         @Query("lastTime") lastTime: Long,
         @Query("pageSize") pageSize: Int = 20
     ): BaseListVO<EventVO>
+
+
 }

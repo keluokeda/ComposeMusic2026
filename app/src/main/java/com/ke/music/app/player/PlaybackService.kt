@@ -18,6 +18,7 @@ class PlaybackService : MediaSessionService() {
 
     override fun onCreate() {
         super.onCreate()
+        player.repeatMode = ExoPlayer.REPEAT_MODE_ALL
         mediaSession = MediaSession.Builder(this, player).build()
     }
 

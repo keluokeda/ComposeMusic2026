@@ -134,7 +134,11 @@ data class UserDetailVO(
 @Serializable
 data class SongDetailVO(
     val song: Song,
-    val url: String? = null
+    val url: String? = null,
+    /**
+     * 是否喜欢
+     */
+    val liked: Boolean
 )
 
 @Serializable

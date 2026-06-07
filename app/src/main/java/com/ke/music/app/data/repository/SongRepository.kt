@@ -8,4 +8,8 @@ import javax.inject.Singleton
 @Singleton
 class SongRepository @Inject constructor(private val musicApiService: MusicApiService) {
     suspend fun detail(id: Long) = safeApiCall { musicApiService.songDetail(id) }
+
+    suspend fun lrc(id: Long) = safeApiCall { musicApiService.songLrc(id) }
+
+    suspend fun likeSong(id: Long, like: Boolean) = safeApiCall { musicApiService.likeSong(id, like) }
 }
