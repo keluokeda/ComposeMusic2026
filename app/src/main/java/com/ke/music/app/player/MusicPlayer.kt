@@ -41,7 +41,7 @@ class MusicPlayer @Inject constructor(
     override var songs: List<Song> = emptyList()
         private set
 
-    private val iPlayerListeners = mutableListOf<IPlayerListener>()
+//    private val iPlayerListeners = mutableListOf<IPlayerListener>()
 
     private val controller: MediaController?
         get() = if (controllerFuture.isDone) controllerFuture.get() else null
@@ -50,6 +50,7 @@ class MusicPlayer @Inject constructor(
         controllerFuture.addListener({
             val c = controllerFuture.get()
             c.repeatMode = Player.REPEAT_MODE_ALL
+            c.playWhenReady = true
             c.addListener(object : Player.Listener {
 
                 override fun onIsPlayingChanged(playing: Boolean) {
@@ -86,17 +87,23 @@ class MusicPlayer @Inject constructor(
                     if (reason != Player.MEDIA_ITEM_TRANSITION_REASON_AUTO) return
                     val index = c.currentMediaItemIndex
                     _currentIndex.value = index
-                    if (!hasSongUrl(index)) {
-                        iPlayerListeners.forEach { it.onMediaItemTransition(index) }
-                    }
+//                    if (!hasSongUrl(index)) {
+//                        iPlayerListeners.forEach { it.onMediaItemTransition(index) }
+//                    }
                 }
 
                 override fun onPlayerError(error: PlaybackException) {
                     val index = c.currentMediaItemIndex
-                    if (c.currentMediaItem != null && !hasSongUrl(index)) {
-                        iPlayerListeners.forEach { it.onPlayerError(index) }
+                    if(error.errorCode == PlaybackException.ERROR_CODE_IO_FILE_NOT_FOUND){
+                        //资源有问题
                     }
+
+//                    if (c.currentMediaItem != null && !hasSongUrl(index)) {
+//                        iPlayerListeners.forEach { it.onPlayerError(index) }
+//                    }
                 }
+
+
             })
         }, MoreExecutors.directExecutor())
     }
@@ -109,13 +116,13 @@ class MusicPlayer @Inject constructor(
         return !isUriEmpty(c.getMediaItemAt(index))
     }
 
-    override fun addListener(listener: IPlayerListener) {
-        iPlayerListeners.add(listener)
-    }
-
-    override fun removeListener(listener: IPlayerListener) {
-        iPlayerListeners.remove(listener)
-    }
+//    override fun addListener(listener: IPlayerListener) {
+//        iPlayerListeners.add(listener)
+//    }
+//
+//    override fun removeListener(listener: IPlayerListener) {
+//        iPlayerListeners.remove(listener)
+//    }
 
     override fun playSongs(songs: List<Song>, startPosition: Int) {
         this.songs = songs
@@ -133,6 +140,8 @@ class MusicPlayer @Inject constructor(
             // 不调 prepare()：避免 ExoPlayer 在 REPEAT_MODE_ALL + 空 URI 下反复 AUTO 跳曲。
             // PLAYLIST_CHANGED / SEEK 均被 onMediaItemTransition 过滤，由 MusicViewModel 直接处理。
             c.setMediaItems(mediaItems, startPosition, 0L)
+            c.prepare()
+            c.play()
         }, MoreExecutors.directExecutor())
     }
 
@@ -158,12 +167,12 @@ class MusicPlayer @Inject constructor(
         c.pause()
         c.seekTo(nextIndex, 0L)
         _currentIndex.value = nextIndex
-        if (hasSongUrl(nextIndex)) {
-            c.prepare()
-            c.play()
-        } else {
-            iPlayerListeners.forEach { it.onMediaItemTransition(nextIndex) }
-        }
+//        if (hasSongUrl(nextIndex)) {
+//            c.prepare()
+//            c.play()
+//        } else {
+//            iPlayerListeners.forEach { it.onMediaItemTransition(nextIndex) }
+//        }
     }
 
     override fun skipToPrevious() {
@@ -173,12 +182,12 @@ class MusicPlayer @Inject constructor(
         c.pause()
         c.seekTo(prevIndex, 0L)
         _currentIndex.value = prevIndex
-        if (hasSongUrl(prevIndex)) {
-            c.prepare()
-            c.play()
-        } else {
-            iPlayerListeners.forEach { it.onMediaItemTransition(prevIndex) }
-        }
+//        if (hasSongUrl(prevIndex)) {
+//            c.prepare()
+//            c.play()
+//        } else {
+//            iPlayerListeners.forEach { it.onMediaItemTransition(prevIndex) }
+//        }
     }
 
     override fun pause() {
@@ -247,7 +256,7 @@ class MusicPlayer @Inject constructor(
         imageUrl: String?,
         mediaId: String? = null
     ): MediaItem = MediaItem.Builder()
-        .apply { if (!url.isNullOrEmpty()) setUri(url) }
+        .setUri(url?:"")
         .setMediaId(mediaId ?: url.orEmpty())
         .setMediaMetadata(
             MediaMetadata.Builder()

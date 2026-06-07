@@ -85,15 +85,14 @@ fun PlayerRoute(
     musicViewModel: MusicViewModel,
     onBack: () -> Unit
 ) {
-    val iPlayer = musicViewModel.player
 
-    val isPlaying by iPlayer.isPlaying.collectAsState()
-    val duration by iPlayer.duration.collectAsState()
-    val currentMetadata by iPlayer.currentMetadata.collectAsState()
-    val repeatMode by iPlayer.repeatMode.collectAsState()
-    val currentMediaItemIndex by iPlayer.currentIndex.collectAsState()
+    val isPlaying by musicViewModel.isPlaying.collectAsState()
+    val duration by musicViewModel.duration.collectAsState()
+    val currentMetadata by musicViewModel.currentMetadata.collectAsState()
+    val repeatMode by musicViewModel.repeatMode.collectAsState()
+    val currentMediaItemIndex by musicViewModel.currentIndex.collectAsState()
 
-    var currentPosition by remember { mutableLongStateOf(iPlayer.getCurrentPosition()) }
+    var currentPosition by remember { mutableLongStateOf(musicViewModel.getCurrentPosition()) }
     var showPlaylist by remember { mutableStateOf(false) }
     var showLyrics by remember { mutableStateOf(false) }
 
@@ -102,7 +101,7 @@ fun PlayerRoute(
 
     LaunchedEffect(isPlaying) {
         while (isPlaying) {
-            currentPosition = iPlayer.getCurrentPosition()
+            currentPosition = musicViewModel.getCurrentPosition()
             delay(1000.milliseconds)
         }
     }
@@ -128,7 +127,7 @@ fun PlayerRoute(
 
             if (screenSize == ScreenSize.Compact) {
                 PlayerCompact(
-                    musicViewModel = musicViewModel,
+
                     currentMetadata = currentMetadata,
                     currentPosition = currentPosition,
                     duration = duration,
@@ -138,7 +137,16 @@ fun PlayerRoute(
                     onToggleLyrics = { showLyrics = !showLyrics },
                     onShowPlaylist = { showPlaylist = true },
                     onToggleLike = { musicViewModel.toggleLike() },
-                    isLiked = musicViewModel.currentSongLiked
+                    isLiked = musicViewModel.currentSongLiked,
+                    lrcString = musicViewModel.currentLrc,
+                    seekTo = {
+                        musicViewModel.seekTo(it)
+                    },
+                    toggleRepeatMode = musicViewModel::toggleRepleatMode,
+                    skipToPrevious = musicViewModel::skipToPrevious,
+                    skipToNext = musicViewModel::skipToNext,
+                    pause = musicViewModel::pause,
+                    resume = musicViewModel::resume
                 )
             } else {
                 PlayerMedium(
@@ -150,7 +158,15 @@ fun PlayerRoute(
                     repeatMode = repeatMode,
                     onShowPlaylist = { showPlaylist = true },
                     onToggleLike = { musicViewModel.toggleLike() },
-                    isLiked = musicViewModel.currentSongLiked
+                    isLiked = musicViewModel.currentSongLiked,
+                    seekTo = {
+                        musicViewModel.seekTo(it)
+                    },
+                    toggleRepeatMode = musicViewModel::toggleRepleatMode,
+                    skipToPrevious = musicViewModel::skipToPrevious,
+                    skipToNext = musicViewModel::skipToNext,
+                    pause = musicViewModel::pause,
+                    resume = musicViewModel::resume
                 )
             }
         }
@@ -158,7 +174,7 @@ fun PlayerRoute(
 
     if (showPlaylist) {
         val playlistState = rememberLazyListState()
-        val songs = iPlayer.songs
+        val songs = musicViewModel.songs
 
         LaunchedEffect(showPlaylist) {
             if (currentMediaItemIndex >= 0 && currentMediaItemIndex < songs.size) {
@@ -218,7 +234,7 @@ fun PlayerRoute(
 
 @Composable
 private fun PlayerCompact(
-    musicViewModel: MusicViewModel,
+
     currentMetadata: com.ke.music.app.player.SongMetadata?,
     currentPosition: Long,
     duration: Long,
@@ -228,7 +244,15 @@ private fun PlayerCompact(
     onToggleLyrics: () -> Unit,
     onShowPlaylist: () -> Unit,
     onToggleLike: () -> Unit,
-    isLiked: Boolean
+    isLiked: Boolean,
+    lrcString: String? = null,
+    seekTo: (Long) -> Unit = {},
+
+    toggleRepeatMode: () -> Unit,
+    skipToPrevious: () -> Unit,
+    pause: () -> Unit,
+    resume: () -> Unit,
+    skipToNext: () -> Unit
 ) {
     Column(
         modifier = Modifier
@@ -245,7 +269,7 @@ private fun PlayerCompact(
             contentAlignment = Alignment.Center
         ) {
             if (showLyrics) {
-                LyricsView(musicViewModel.currentLrc, currentPosition)
+                LyricsView(lrcString, currentPosition)
             } else {
                 AnimatedContent(
                     targetState = currentMetadata?.artworkUrl,
@@ -287,7 +311,7 @@ private fun PlayerCompact(
 
         Slider(
             value = if (duration > 0) currentPosition.toFloat() / duration.toFloat() else 0f,
-            onValueChange = { musicViewModel.player.seekTo((it * duration).toLong()) },
+            onValueChange = { seekTo((it * duration).toLong()) },
             modifier = Modifier.fillMaxWidth()
         )
 
@@ -302,10 +326,14 @@ private fun PlayerCompact(
         Spacer(modifier = Modifier.height(32.dp))
 
         PlayerControls(
-            musicViewModel = musicViewModel,
             isPlaying = isPlaying,
             repeatMode = repeatMode,
-            onShowPlaylist = onShowPlaylist
+            onShowPlaylist = onShowPlaylist,
+            toggleRepeatMode = toggleRepeatMode,
+            skipToNext = skipToNext,
+            resume = resume,
+            pause = pause,
+            skipToPrevious = skipToPrevious
         )
     }
 }
@@ -320,7 +348,14 @@ private fun PlayerMedium(
     repeatMode: RepeatMode,
     onShowPlaylist: () -> Unit,
     onToggleLike: () -> Unit,
-    isLiked: Boolean
+    isLiked: Boolean,
+    seekTo: (Long) -> Unit,
+
+    toggleRepeatMode: () -> Unit,
+    skipToPrevious: () -> Unit,
+    pause: () -> Unit,
+    resume: () -> Unit,
+    skipToNext: () -> Unit
 ) {
     Row(
         modifier = Modifier
@@ -374,7 +409,7 @@ private fun PlayerMedium(
 
             Slider(
                 value = if (duration > 0) currentPosition.toFloat() / duration.toFloat() else 0f,
-                onValueChange = { musicViewModel.player.seekTo((it * duration).toLong()) },
+                onValueChange = { seekTo((it * duration).toLong()) },
                 modifier = Modifier.fillMaxWidth()
             )
 
@@ -389,10 +424,14 @@ private fun PlayerMedium(
             Spacer(modifier = Modifier.height(32.dp))
 
             PlayerControls(
-                musicViewModel = musicViewModel,
                 isPlaying = isPlaying,
                 repeatMode = repeatMode,
-                onShowPlaylist = onShowPlaylist
+                onShowPlaylist = onShowPlaylist,
+                toggleRepeatMode = toggleRepeatMode,
+                skipToNext = skipToNext,
+                resume = resume,
+                pause = pause,
+                skipToPrevious = skipToPrevious
             )
         }
 
@@ -411,18 +450,26 @@ private fun PlayerMedium(
 
 @Composable
 private fun PlayerControls(
-    musicViewModel: MusicViewModel,
+
     isPlaying: Boolean,
     repeatMode: RepeatMode,
-    onShowPlaylist: () -> Unit
+    onShowPlaylist: () -> Unit,
+
+
+    toggleRepeatMode: () -> Unit,
+    skipToPrevious: () -> Unit,
+    pause: () -> Unit,
+    resume: () -> Unit,
+    skipToNext: () -> Unit
+
 ) {
-    val player = musicViewModel.player
+
     Row(
         modifier = Modifier.fillMaxWidth(),
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.SpaceBetween
     ) {
-        IconButton(onClick = { player.toggleRepeatMode() }) {
+        IconButton(onClick = toggleRepeatMode) {
             val icon = when (repeatMode) {
                 RepeatMode.SHUFFLE -> Icons.Default.Shuffle
                 RepeatMode.ONE -> Icons.Default.RepeatOne
@@ -435,12 +482,12 @@ private fun PlayerControls(
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.spacedBy(16.dp)
         ) {
-            IconButton(onClick = { player.skipToPrevious() }) {
+            IconButton(onClick = { skipToPrevious() }) {
                 Icon(Icons.Default.SkipPrevious, null, modifier = Modifier.size(48.dp))
             }
 
             IconButton(
-                onClick = { if (isPlaying) player.pause() else player.resume() },
+                onClick = { if (isPlaying) pause() else resume() },
                 modifier = Modifier.size(64.dp)
             ) {
                 Icon(
@@ -450,7 +497,7 @@ private fun PlayerControls(
                 )
             }
 
-            IconButton(onClick = { player.skipToNext() }) {
+            IconButton(onClick = { skipToNext() }) {
                 Icon(Icons.Default.SkipNext, null, modifier = Modifier.size(48.dp))
             }
         }

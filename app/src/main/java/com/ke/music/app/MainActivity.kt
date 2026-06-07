@@ -19,7 +19,6 @@ import androidx.navigation3.runtime.rememberSaveableStateHolderNavEntryDecorator
 import androidx.navigation3.ui.NavDisplay
 import com.ke.music.app.data.repository.SongRepository
 import com.ke.music.app.player.IPlayer
-import com.ke.music.app.player.IPlayerListener
 import com.ke.music.app.ui.navigation.Destination
 import com.ke.music.app.ui.screen.artist_detail.ArtistDetailRoute
 import com.ke.music.app.ui.screen.artist_detail.ArtistDetailViewModel
@@ -190,7 +189,7 @@ class MainActivity : ComponentActivity() {
 @HiltViewModel
 class MusicViewModel @Inject constructor(
     private val songRepository: SongRepository,
-    val player: IPlayer
+    private val player: IPlayer
 ) : ViewModel() {
 
     var currentLrc by mutableStateOf<String?>(null)
@@ -204,6 +203,30 @@ class MusicViewModel @Inject constructor(
     // 记录用户最后一次想播放的 index（main thread 同步赋值，不依赖异步 StateFlow）
     private var intendedPlayIndex = -1
 
+    val isPlaying = player.isPlaying
+    val duration = player.duration
+    val currentMetadata = player.currentMetadata
+    val currentIndex = player.currentIndex
+
+    val repeatMode = player.repeatMode
+
+    val hasMediaItem = player.hasMediaItem
+
+    fun getCurrentPosition() = player.getCurrentPosition()
+
+    val songs = player.songs
+
+    fun seekTo(position: Long) = player.seekTo(position)
+
+    fun toggleRepleatMode() = player.toggleRepeatMode()
+
+    fun skipToNext() = player.skipToNext()
+    fun skipToPrevious() = player.skipToPrevious()
+    fun pause() = player.pause()
+    fun resume() = player.resume()
+
+
+
     private suspend fun loadLrc(id: Long) {
         currentLrc = null
         val response = songRepository.lrc(id)
@@ -214,7 +237,7 @@ class MusicViewModel @Inject constructor(
 
     fun playSongs(songs: List<com.ke.music.app.data.model.Song>, index: Int = 0) {
         player.playSongs(songs, index)
-        fetchAndPlay(index)
+//        fetchAndPlay(index)
     }
 
     fun playAtIndex(index: Int) {
@@ -269,14 +292,14 @@ class MusicViewModel @Inject constructor(
     }
 
     init {
-        player.addListener(object : IPlayerListener {
-            override fun onMediaItemTransition(index: Int) {
-                fetchAndPlay(index)
-            }
-
-            override fun onPlayerError(index: Int) {
-                fetchAndPlay(index)
-            }
-        })
+//        player.addListener(object : IPlayerListener {
+//            override fun onMediaItemTransition(index: Int) {
+//                fetchAndPlay(index)
+//            }
+//
+//            override fun onPlayerError(index: Int) {
+//                fetchAndPlay(index)
+//            }
+//        })
     }
 }

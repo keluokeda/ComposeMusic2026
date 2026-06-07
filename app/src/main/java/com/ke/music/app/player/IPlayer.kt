@@ -11,12 +11,12 @@ data class SongMetadata(
 
 enum class RepeatMode { LIST, ONE, SHUFFLE }
 
-interface IPlayerListener {
-    /** 切歌（PLAYLIST_CHANGED 由调用方直接处理，此处不触发） */
-    fun onMediaItemTransition(index: Int) {}
-    /** 播放出错且当前条目无 URL，需 ViewModel 去拉地址 */
-    fun onPlayerError(index: Int) {}
-}
+//interface IPlayerListener {
+//    /** 切歌（PLAYLIST_CHANGED 由调用方直接处理，此处不触发） */
+//    fun onMediaItemTransition(index: Int) {}
+//    /** 播放出错且当前条目无 URL，需 ViewModel 去拉地址 */
+//    fun onPlayerError(index: Int) {}
+//}
 
 interface IPlayer {
 
@@ -36,8 +36,8 @@ interface IPlayer {
     /** index 对应的条目是否已有可播放 URL */
     fun hasSongUrl(index: Int): Boolean
 
-    fun addListener(listener: IPlayerListener)
-    fun removeListener(listener: IPlayerListener)
+//    fun addListener(listener: IPlayerListener)
+//    fun removeListener(listener: IPlayerListener)
 
     fun playSongs(songs: List<Song>, startPosition: Int)
     fun playAtIndex(index: Int)

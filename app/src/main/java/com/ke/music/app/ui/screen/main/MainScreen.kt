@@ -151,10 +151,10 @@ private fun BottomPlayerBar(
     musicViewModel: MusicViewModel,
     navigate: (Destination) -> Unit
 ) {
-    val player = musicViewModel.player
-    val hasMediaItem by player.hasMediaItem.collectAsState()
-    val currentMetadata by player.currentMetadata.collectAsState()
-    val isPlaying by player.isPlaying.collectAsState()
+//    val player = musicViewModel.player
+    val hasMediaItem by musicViewModel.hasMediaItem.collectAsState()
+    val currentMetadata by musicViewModel.currentMetadata.collectAsState()
+    val isPlaying by musicViewModel.isPlaying.collectAsState()
 
     if (!hasMediaItem) return
 
@@ -200,12 +200,12 @@ private fun BottomPlayerBar(
                     )
                 }
 
-                IconButton(onClick = { player.skipToPrevious() }) {
+                IconButton(onClick = { musicViewModel.skipToPrevious() }) {
                     Icon(Icons.Default.SkipPrevious, contentDescription = null)
                 }
 
                 IconButton(onClick = {
-                    if (isPlaying) player.pause() else player.resume()
+                    if (isPlaying) musicViewModel.pause() else musicViewModel.resume()
                 }) {
                     Icon(
                         if (isPlaying) Icons.Default.Pause else Icons.Default.PlayArrow,
@@ -213,7 +213,7 @@ private fun BottomPlayerBar(
                     )
                 }
 
-                IconButton(onClick = { player.skipToNext() }) {
+                IconButton(onClick = { musicViewModel.skipToNext() }) {
                     Icon(Icons.Default.SkipNext, contentDescription = null)
                 }
             }
