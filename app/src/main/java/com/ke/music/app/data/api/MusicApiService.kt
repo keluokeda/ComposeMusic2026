@@ -80,11 +80,19 @@ interface MusicApiService {
     /**
      * 喜欢歌曲
      */
-    @GET("song/{id}/like")
+    @POST("song/{id}/like")
     suspend fun likeSong(
         @Path("id") id: Long,
         @Query("like") like: Boolean
     ): BaseVO<String>
+
+    /**
+     * 喜欢歌曲
+     */
+    @GET("song/{id}/like")
+    suspend fun isLikeSong(
+        @Path("id") id: Long
+    ): BaseVO<Boolean>
 
     /**
      * 歌手详情
@@ -203,5 +211,9 @@ interface MusicApiService {
         @Query("pageSize") pageSize: Int = 20
     ): BaseListVO<EventVO>
 
-
+    /**
+     * 最近播放的歌曲
+     */
+    @GET("song/recent")
+    suspend fun recentSongs(): BaseVO<List<Song>>
 }

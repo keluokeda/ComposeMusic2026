@@ -30,6 +30,7 @@ import androidx.compose.material.icons.automirrored.filled.PlaylistPlay
 import androidx.compose.material.icons.filled.AddToPhotos
 import androidx.compose.material.icons.filled.Favorite
 import androidx.compose.material.icons.filled.FavoriteBorder
+import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material.icons.filled.Pause
 import androidx.compose.material.icons.filled.PlayArrow
 import androidx.compose.material.icons.filled.Repeat
@@ -38,6 +39,8 @@ import androidx.compose.material.icons.filled.Share
 import androidx.compose.material.icons.filled.Shuffle
 import androidx.compose.material.icons.filled.SkipNext
 import androidx.compose.material.icons.filled.SkipPrevious
+import androidx.compose.material3.DropdownMenu
+import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
@@ -72,8 +75,10 @@ import androidx.compose.ui.unit.sp
 import com.ke.music.app.player.RepeatMode
 import coil3.compose.AsyncImage
 import com.ke.music.app.MusicViewModel
+import com.ke.music.app.player.SongMetadata
 import com.ke.music.app.ui.components.ScreenSize
 import com.ke.music.app.ui.components.screenSize
+import com.ke.music.app.ui.navigation.Destination
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import java.util.Locale
@@ -83,14 +88,18 @@ import kotlin.time.Duration.Companion.milliseconds
 @Composable
 fun PlayerRoute(
     musicViewModel: MusicViewModel,
-    onBack: () -> Unit
+    onBack: () -> Unit,
+    navigate: (Destination) -> Unit
 ) {
 
+    val lrcString by musicViewModel.currentLrc.collectAsState()
+    val songs by musicViewModel.songs.collectAsState()
     val isPlaying by musicViewModel.isPlaying.collectAsState()
     val duration by musicViewModel.duration.collectAsState()
     val currentMetadata by musicViewModel.currentMetadata.collectAsState()
     val repeatMode by musicViewModel.repeatMode.collectAsState()
     val currentMediaItemIndex by musicViewModel.currentIndex.collectAsState()
+    val currentSongLiked by musicViewModel.currentSongLiked.collectAsState()
 
     var currentPosition by remember { mutableLongStateOf(musicViewModel.getCurrentPosition()) }
     var showPlaylist by remember { mutableStateOf(false) }
@@ -98,6 +107,10 @@ fun PlayerRoute(
 
     val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
     val scope = rememberCoroutineScope()
+
+    var expanded by remember {
+        mutableStateOf(false)
+    }
 
     LaunchedEffect(isPlaying) {
         while (isPlaying) {
@@ -109,10 +122,41 @@ fun PlayerRoute(
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text("正在播放") },
+                title = { Text(currentMetadata?.title ?: "正在播放") },
                 navigationIcon = {
                     IconButton(onClick = onBack) {
                         Icon(Icons.AutoMirrored.Filled.ArrowBack, null)
+                    }
+                },
+                actions = {
+                    Box {
+                        IconButton(onClick = {
+                            expanded = !expanded
+                        }) {
+                            Icon(Icons.Default.MoreVert, null)
+                        }
+
+                        val currentSong = songs[currentMediaItemIndex]
+
+
+                        DropdownMenu(expanded = expanded, onDismissRequest = {
+                            expanded = false
+                        }) {
+                            currentSong.artists.forEach { artist ->
+                                DropdownMenuItem(text = {
+                                    Text("歌手：${artist.name}")
+                                }, onClick = {
+                                    expanded = false
+                                    navigate(Destination.ArtistDetail(artist.id))
+                                })
+                            }
+
+                            DropdownMenuItem(text = {
+                                Text("专辑：${currentSong.album.name}")
+                            }, onClick = {
+
+                            })
+                        }
                     }
                 }
             )
@@ -137,20 +181,25 @@ fun PlayerRoute(
                     onToggleLyrics = { showLyrics = !showLyrics },
                     onShowPlaylist = { showPlaylist = true },
                     onToggleLike = { musicViewModel.toggleLike() },
-                    isLiked = musicViewModel.currentSongLiked,
-                    lrcString = musicViewModel.currentLrc,
+                    isLiked = currentSongLiked,
+                    lrcString = lrcString,
                     seekTo = {
                         musicViewModel.seekTo(it)
                     },
-                    toggleRepeatMode = musicViewModel::toggleRepleatMode,
+                    toggleRepeatMode = musicViewModel::toggleRepeatMode,
                     skipToPrevious = musicViewModel::skipToPrevious,
                     skipToNext = musicViewModel::skipToNext,
                     pause = musicViewModel::pause,
-                    resume = musicViewModel::resume
+                    resume = musicViewModel::resume,
+                    toComments = {
+                        currentMetadata?.let {
+                            navigate(Destination.Comments(0, it.id))
+                        }
+                    }
                 )
             } else {
                 PlayerMedium(
-                    musicViewModel = musicViewModel,
+
                     currentMetadata = currentMetadata,
                     currentPosition = currentPosition,
                     duration = duration,
@@ -158,15 +207,16 @@ fun PlayerRoute(
                     repeatMode = repeatMode,
                     onShowPlaylist = { showPlaylist = true },
                     onToggleLike = { musicViewModel.toggleLike() },
-                    isLiked = musicViewModel.currentSongLiked,
+                    isLiked = currentSongLiked,
                     seekTo = {
                         musicViewModel.seekTo(it)
                     },
-                    toggleRepeatMode = musicViewModel::toggleRepleatMode,
+                    toggleRepeatMode = musicViewModel::toggleRepeatMode,
                     skipToPrevious = musicViewModel::skipToPrevious,
                     skipToNext = musicViewModel::skipToNext,
                     pause = musicViewModel::pause,
-                    resume = musicViewModel::resume
+                    resume = musicViewModel::resume,
+                    lrcString = lrcString
                 )
             }
         }
@@ -174,8 +224,6 @@ fun PlayerRoute(
 
     if (showPlaylist) {
         val playlistState = rememberLazyListState()
-        val songs = musicViewModel.songs
-
         LaunchedEffect(showPlaylist) {
             if (currentMediaItemIndex >= 0 && currentMediaItemIndex < songs.size) {
                 playlistState.scrollToItem(currentMediaItemIndex)
@@ -234,8 +282,7 @@ fun PlayerRoute(
 
 @Composable
 private fun PlayerCompact(
-
-    currentMetadata: com.ke.music.app.player.SongMetadata?,
+    currentMetadata: SongMetadata?,
     currentPosition: Long,
     duration: Long,
     isPlaying: Boolean,
@@ -247,24 +294,24 @@ private fun PlayerCompact(
     isLiked: Boolean,
     lrcString: String? = null,
     seekTo: (Long) -> Unit = {},
-
     toggleRepeatMode: () -> Unit,
     skipToPrevious: () -> Unit,
     pause: () -> Unit,
     resume: () -> Unit,
-    skipToNext: () -> Unit
+    skipToNext: () -> Unit,
+    toComments: () -> Unit
 ) {
     Column(
         modifier = Modifier
             .fillMaxSize()
             .padding(24.dp),
         horizontalAlignment = Alignment.CenterHorizontally,
-        verticalArrangement = Arrangement.Center
+//        verticalArrangement = Arrangement.Center
     ) {
         Box(
             modifier = Modifier
                 .fillMaxWidth()
-                .weight(1f)
+                .aspectRatio(1f)
                 .clickable { onToggleLyrics() },
             contentAlignment = Alignment.Center
         ) {
@@ -289,7 +336,7 @@ private fun PlayerCompact(
             }
         }
 
-        Spacer(modifier = Modifier.height(32.dp))
+        Spacer(modifier = Modifier.weight(1f))
         Row(
             modifier = Modifier.fillMaxWidth(),
             horizontalArrangement = Arrangement.SpaceAround
@@ -304,10 +351,10 @@ private fun PlayerCompact(
                     modifier = Modifier.size(32.dp)
                 )
             }
-            IconButton(onClick = {}) { Icon(Icons.AutoMirrored.Filled.Comment, null) }
+            IconButton(onClick = toComments) { Icon(Icons.AutoMirrored.Filled.Comment, null) }
         }
 
-        Spacer(modifier = Modifier.height(48.dp))
+        Spacer(modifier = Modifier.weight(1f))
 
         Slider(
             value = if (duration > 0) currentPosition.toFloat() / duration.toFloat() else 0f,
@@ -323,7 +370,7 @@ private fun PlayerCompact(
             Text(text = formatTime(duration))
         }
 
-        Spacer(modifier = Modifier.height(32.dp))
+        Spacer(modifier = Modifier.weight(1f))
 
         PlayerControls(
             isPlaying = isPlaying,
@@ -340,7 +387,7 @@ private fun PlayerCompact(
 
 @Composable
 private fun PlayerMedium(
-    musicViewModel: MusicViewModel,
+
     currentMetadata: com.ke.music.app.player.SongMetadata?,
     currentPosition: Long,
     duration: Long,
@@ -350,7 +397,7 @@ private fun PlayerMedium(
     onToggleLike: () -> Unit,
     isLiked: Boolean,
     seekTo: (Long) -> Unit,
-
+    lrcString: String?,
     toggleRepeatMode: () -> Unit,
     skipToPrevious: () -> Unit,
     pause: () -> Unit,
@@ -443,7 +490,7 @@ private fun PlayerMedium(
                 .fillMaxHeight(),
             contentAlignment = Alignment.Center
         ) {
-            LyricsView(musicViewModel.currentLrc, currentPosition)
+            LyricsView(lrcString, currentPosition)
         }
     }
 }

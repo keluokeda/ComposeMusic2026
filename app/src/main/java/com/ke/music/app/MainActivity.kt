@@ -5,9 +5,6 @@ import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.ViewModel
@@ -17,8 +14,9 @@ import androidx.navigation3.runtime.entryProvider
 import androidx.navigation3.runtime.rememberNavBackStack
 import androidx.navigation3.runtime.rememberSaveableStateHolderNavEntryDecorator
 import androidx.navigation3.ui.NavDisplay
-import com.ke.music.app.data.repository.SongRepository
+import com.ke.music.app.data.model.Song
 import com.ke.music.app.player.IPlayer
+import com.ke.music.app.player.IPlayerController
 import com.ke.music.app.ui.navigation.Destination
 import com.ke.music.app.ui.screen.artist_detail.ArtistDetailRoute
 import com.ke.music.app.ui.screen.artist_detail.ArtistDetailViewModel
@@ -31,16 +29,16 @@ import com.ke.music.app.ui.screen.login.LoginRoute
 import com.ke.music.app.ui.screen.main.MainRoute
 import com.ke.music.app.ui.screen.notification.comment.NotificationCommentRoute
 import com.ke.music.app.ui.screen.notification.notices.NoticesRoute
+import com.ke.music.app.ui.screen.player.PlayerRoute
 import com.ke.music.app.ui.screen.playlist.PlaylistDetailRoute
 import com.ke.music.app.ui.screen.playlist.PlaylistDetailViewModel
-import com.ke.music.app.ui.screen.player.PlayerRoute
+import com.ke.music.app.ui.screen.recent.RecentRoute
 import com.ke.music.app.ui.screen.splash.SplashRoute
 import com.ke.music.app.ui.screen.top_playlists.TopPlaylistsRoute
 import com.ke.music.app.ui.screen.user_status.UserStatusRoute
 import com.ke.music.app.ui.theme.MusicTheme
 import dagger.hilt.android.AndroidEntryPoint
 import dagger.hilt.android.lifecycle.HiltViewModel
-import kotlinx.coroutines.launch
 import javax.inject.Inject
 
 @AndroidEntryPoint
@@ -170,9 +168,15 @@ class MainActivity : ComponentActivity() {
                         }
 
                         entry<Destination.Player> {
-                            PlayerRoute(musicViewModel) {
+                            PlayerRoute(musicViewModel, {
                                 controller.removeLastOrNull()
-                            }
+                            }, {
+                                controller.add(it)
+                            })
+                        }
+
+                        entry<Destination.Recent> {
+                            RecentRoute(onBack = { controller.removeLastOrNull() }, musicViewModel)
                         }
 
                     }, entryDecorators = listOf(
@@ -188,21 +192,12 @@ class MainActivity : ComponentActivity() {
 
 @HiltViewModel
 class MusicViewModel @Inject constructor(
-    private val songRepository: SongRepository,
     private val player: IPlayer
-) : ViewModel() {
+) : ViewModel(), IPlayerController {
 
-    var currentLrc by mutableStateOf<String?>(null)
-        private set
 
-    var currentSongLiked by mutableStateOf(false)
-        private set
-
-    private val fetchingIds = mutableSetOf<Long>()
-
-    // 记录用户最后一次想播放的 index（main thread 同步赋值，不依赖异步 StateFlow）
-    private var intendedPlayIndex = -1
-
+    val currentLrc = player.currentLrc
+    val currentSongLiked = player.currentSongLiked
     val isPlaying = player.isPlaying
     val duration = player.duration
     val currentMetadata = player.currentMetadata
@@ -216,79 +211,35 @@ class MusicViewModel @Inject constructor(
 
     val songs = player.songs
 
-    fun seekTo(position: Long) = player.seekTo(position)
+    override fun seekTo(positionMs: Long) = player.seekTo(positionMs)
 
-    fun toggleRepleatMode() = player.toggleRepeatMode()
+    override fun toggleRepeatMode() = player.toggleRepeatMode()
 
-    fun skipToNext() = player.skipToNext()
-    fun skipToPrevious() = player.skipToPrevious()
-    fun pause() = player.pause()
-    fun resume() = player.resume()
+    override fun skipToNext() = player.skipToNext()
+    override fun skipToPrevious() = player.skipToPrevious()
+    override fun pause() = player.pause()
+    override fun resume() = player.resume()
 
 
+    override fun playSongs(songs: List<Song>, startPosition: Int) =
+        player.playSongs(songs, startPosition)
 
-    private suspend fun loadLrc(id: Long) {
-        currentLrc = null
-        val response = songRepository.lrc(id)
-        if (response.success) {
-            currentLrc = response.data
-        }
-    }
 
-    fun playSongs(songs: List<com.ke.music.app.data.model.Song>, index: Int = 0) {
-        player.playSongs(songs, index)
-//        fetchAndPlay(index)
-    }
-
-    fun playAtIndex(index: Int) {
+    override fun playAtIndex(index: Int) {
         player.playAtIndex(index)
-        if (!player.hasSongUrl(index)) {
-            fetchAndPlay(index)
-        }
     }
 
-    fun toggleLike() {
-        val index = player.currentIndex.value
-        val song = player.songs.getOrNull(index) ?: return
-        val targetLike = !currentSongLiked
 
-        viewModelScope.launch {
-            val response = songRepository.likeSong(song.id, targetLike)
-            if (response.success) {
-                currentSongLiked = targetLike
-            } else {
-                MusicApp.toast(response.message.ifEmpty { "操作失败" })
-            }
-        }
+    override fun insertIntoCurrentPlaylist(song: Song, playNow: Boolean): Boolean {
+        return player.insertIntoCurrentPlaylist(song, playNow)
     }
 
-    private fun fetchAndPlay(index: Int) {
-        val song = player.songs.getOrNull(index) ?: return
-        if (player.hasSongUrl(index)) return
-        if (fetchingIds.contains(song.id)) return
-        fetchingIds.add(song.id)
-        // 在 main thread 上同步记录当前意图，避免依赖异步 StateFlow 判断
-        intendedPlayIndex = index
 
-        viewModelScope.launch {
-            try {
-                loadLrc(song.id)
-                val response = songRepository.detail(song.id)
-                if (response.success && response.data?.url != null) {
-                    currentSongLiked = response.data.liked
-                    player.updateSongUrl(index, response.data.url) {
-                        // 只有用户没有切换到别的歌时才播放
-                        if (intendedPlayIndex == index) {
-                            player.startPlayback()
-                        }
-                    }
-                } else {
-                    MusicApp.toast(response.message.ifEmpty { "获取歌曲地址失败" })
-                }
-            } finally {
-                fetchingIds.remove(song.id)
-            }
-        }
+    fun toggleLike() = player.toggleLike()
+
+
+    init {
+        player.bindScope(viewModelScope)
     }
 
     init {

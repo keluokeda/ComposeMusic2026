@@ -45,4 +45,7 @@ sealed interface Destination : NavKey {
 
     @Serializable
     data object Player : Destination
+
+    @Serializable
+    data object Recent: Destination
 }

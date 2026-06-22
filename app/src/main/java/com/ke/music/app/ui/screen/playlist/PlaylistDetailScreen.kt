@@ -92,7 +92,10 @@ fun PlaylistDetailRoute(
     }, play = { index ->
         if (viewModel.uiState is PlaylistDetailViewModel.UiState.Success) {
             val songs = (viewModel.uiState as PlaylistDetailViewModel.UiState.Success).response.songs
-            musicViewModel.playSongs(songs, index)
+            val result = musicViewModel.playSongs(songs, index)
+            if(!result){
+                navigate(Destination.Player)
+            }
         }
     })
 

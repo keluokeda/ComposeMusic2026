@@ -170,7 +170,7 @@ private fun MineContent(content: MineVO, navigate: (Destination) -> Unit) {
 
                 ListItem(
                     modifier = Modifier.clickable(enabled = true) {
-
+                        navigate(Destination.Recent)
                     },
                     headlineContent = {
                         Text("最近播放")

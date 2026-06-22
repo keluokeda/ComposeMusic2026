@@ -52,6 +52,7 @@ import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.unit.dp
 import coil3.compose.AsyncImage
 import com.ke.music.app.MusicViewModel
+import com.ke.music.app.data.model.Song
 import com.ke.music.app.format
 import com.ke.music.app.ui.components.LoadingView
 import com.ke.music.app.ui.components.RetryView
@@ -82,6 +83,7 @@ fun ArtistDetailRoute(
         navigate = navigate,
         play = {
 //            musicViewModel.playNow(it)
+            musicViewModel.insertIntoCurrentPlaylist(it,true)
         }
     )
 }
@@ -95,7 +97,7 @@ private fun ArtistDetailScreen(
     selectedTabIndex: Int,
     onTabClick: (Int) -> Unit,
     navigate: (Destination) -> Unit,
-    play:(Long)-> Unit
+    play: (Song) -> Unit
 ) {
     val scrollState = rememberLazyListState()
     val density = LocalDensity.current
@@ -224,11 +226,14 @@ private fun ArtistDetailScreen(
                                                 }) {
                                                     Text(uiState.content.fansCount.format() + " 粉丝")
                                                 }
+                                                val imageDesc =
+                                                    uiState.content.detail.identify?.imageDesc
 
-                                                Text(
-                                                    uiState.content.detail.identify.imageDesc,
-                                                    style = MaterialTheme.typography.bodySmall
-                                                )
+                                                if (imageDesc != null)
+                                                    Text(
+                                                        imageDesc,
+                                                        style = MaterialTheme.typography.bodySmall
+                                                    )
                                             }
 
                                         }
@@ -265,8 +270,8 @@ private fun ArtistDetailScreen(
                                                 modifier = Modifier.size(40.dp)
                                             )
                                         },
-                                        modifier = Modifier.clickable(true){
-                                            play(it.id)
+                                        modifier = Modifier.clickable(true) {
+                                            play(it)
                                         }
                                     )
                                 }
@@ -328,6 +333,8 @@ private fun ArtistDetailScreen(
                                                     .size(40.dp)
                                                     .clip(CircleShape)
                                             )
+                                        }, modifier = Modifier.clickable(enabled = true){
+                                            navigate(Destination.ArtistDetail(it.id))
                                         }
                                     )
                                 }
@@ -453,10 +460,14 @@ private fun ArtistDetailScreen(
                                                         Text(uiState.content.fansCount.format() + " 粉丝")
                                                     }
 
-                                                    Text(
-                                                        uiState.content.detail.identify.imageDesc,
-                                                        style = MaterialTheme.typography.bodySmall
-                                                    )
+                                                    val imageDesc =
+                                                        uiState.content.detail.identify?.imageDesc
+
+                                                    if (imageDesc != null)
+                                                        Text(
+                                                            imageDesc,
+                                                            style = MaterialTheme.typography.bodySmall
+                                                        )
                                                 }
 
                                             }
@@ -527,8 +538,8 @@ private fun ArtistDetailScreen(
                                                         modifier = Modifier.size(40.dp)
                                                     )
                                                 },
-                                                modifier = Modifier.clickable(true){
-                                                    play(it.id)
+                                                modifier = Modifier.clickable(true) {
+                                                    play(it)
                                                 }
                                             )
                                         }

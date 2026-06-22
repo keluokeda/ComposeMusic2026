@@ -135,10 +135,6 @@ data class UserDetailVO(
 data class SongDetailVO(
     val song: Song,
     val url: String? = null,
-    /**
-     * 是否喜欢
-     */
-    val liked: Boolean
 )
 
 @Serializable
@@ -242,7 +238,7 @@ data class ArtistDetailVO(
     @Serializable
     data class ArtistDetailResponse(
         val videoCount: Int,
-        val identify: ArtistIdentify,
+        val identify: ArtistIdentify?,
         val artist: ArtistDetail,
         val blacklist: Boolean,
         val preferShow: Int,
